@@ -10,9 +10,6 @@ function getServiceAccount() {
     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
   };
 }
-
-if (!admin.apps.length) {
-  admin.initializeApp({
     credential: admin.credential.cert(getServiceAccount()),
     databaseURL: DATABASE_URL,
   });
