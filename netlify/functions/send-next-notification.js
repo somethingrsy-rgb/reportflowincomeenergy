@@ -4,14 +4,11 @@ const DATABASE_URL = process.env.FIREBASE_DATABASE_URL || "https://ryuso-af2f2-d
 const STATE_PATH = "/directorQueue/v1/state";
 
 function getServiceAccount() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (!raw) throw new Error("Missing FIREBASE_SERVICE_ACCOUNT_JSON");
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    const decoded = Buffer.from(raw, "base64").toString("utf8");
-    return JSON.parse(decoded);
-  }
+  return {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  };
 }
 
 if (!admin.apps.length) {
