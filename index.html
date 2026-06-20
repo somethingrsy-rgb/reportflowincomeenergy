@@ -309,12 +309,12 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 </div>
 
 <div class="bg-slate-900 border border-gray-800 rounded-2xl p-6 flex flex-col flex-grow light-card">
-<div class="flex items-center justify-between mb-5">
-<h2 class="text-lg font-bold text-white flex items-center gap-2">
-<span>실시간 대기열</span>
-<span id="waitingCountBadge" class="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-sm font-bold text-blue-400 ring-1 ring-inset ring-blue-400/10">0팀 대기</span>
+<div class="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between mb-5">
+<h2 class="text-lg font-bold text-white flex items-center flex-wrap gap-2">
+<span class="whitespace-nowrap">실시간 대기열</span>
+<span id="waitingCountBadge" class="inline-flex items-center whitespace-nowrap shrink-0 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-sm font-bold text-blue-400 ring-1 ring-inset ring-blue-400/10">0팀 대기</span>
 </h2>
-<span id="queueHelperText" class="text-xs text-gray-500">대기 순서대로 배치되며 관리자가 상시 조율 가능합니다</span>
+<span id="queueHelperText" class="text-xs text-gray-500 sm:text-right">대기 순서대로 배치되며 관리자가 상시 조율 가능합니다</span>
 </div>
 
 <div id="queueEmptyState" class="flex-grow flex flex-col items-center justify-center py-12 text-center text-gray-500">
@@ -950,7 +950,7 @@ async function requestNotificationPermission() {
     }
   }
 
-  alert("일반 브라우저 알림은 켜졌지만, FCM 토큰 발급은 실패했습니다. 배포 주소가 HTTPS인지 확인하세요.");
+  alert("일반 브라우저 알림은 켜졌지만, FCM 토큰 발급은 실패했습니다.\n\n실제 오류:\n" + (window.__lastFcmError || "(오류 메시지 없음 - getToken이 빈 값을 반환함)"));
 }
 
 function setQuickDept(deptName) {
@@ -1344,6 +1344,7 @@ window.initPushNotifications = async function initPushNotifications() {
     return "";
   } catch (error) {
     console.error("FCM token error", error);
+    window.__lastFcmError = (error && (error.code || error.message)) ? `${error.code || ""} ${error.message || error}`.trim() : String(error);
     return "";
   }
 };
