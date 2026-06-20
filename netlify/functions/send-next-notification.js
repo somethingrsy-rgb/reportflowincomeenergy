@@ -10,6 +10,9 @@ function getServiceAccount() {
     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
   };
 }
+
+if (!admin.apps.length) {
+  admin.initializeApp({
     credential: admin.credential.cert(getServiceAccount()),
     databaseURL: DATABASE_URL,
   });
@@ -43,7 +46,6 @@ exports.handler = async (event) => {
   const current = bookings[idx];
   if (!current.fcmToken) return json(200, { ok: true, skipped: "no-fcm-token", reportingId: current.id });
 
-  // 같은 calledAt에 대해 중복 발송 방지
   if (current.pushNotifiedAt && current.pushNotifiedCalledAt === current.calledAt) {
     return json(200, { ok: true, skipped: "already-sent", reportingId: current.id });
   }
@@ -63,7 +65,7 @@ exports.handler = async (event) => {
         requireInteraction: true,
       },
       fcmOptions: {
-        link: "https://reportflowincomeenergy.netlify.app/",
+        link: "https://reportflowincomeenergy-git.netlify.app/",
       },
     },
     data: {
