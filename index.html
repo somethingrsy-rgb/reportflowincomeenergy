@@ -517,6 +517,14 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 <script>
 const FIREBASE_DB_URL = "https://ryuso-af2f2-default-rtdb.firebaseio.com/directorQueue/v1/state.json";
 
+// 익명 로그인 토큰을 주소 뒤에 붙여서, Database 규칙이 "로그인한 사람만 허용"으로
+// 바뀌어도 이 사이트는 계속 정상 작동하도록 해주는 함수
+function authedDbUrl() {
+  return window.firebaseIdToken
+    ? FIREBASE_DB_URL + "?auth=" + window.firebaseIdToken
+    : FIREBASE_DB_URL;
+}
+
 let localState = {
   bookings: [],
   preCallTimingCount: 2,
@@ -568,7 +576,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 async function fetchState() {
   try {
-    const response = await fetch(FIREBASE_DB_URL);
+    const response = await fetch(authedDbUrl());
     if (!response.ok) {
       throw new Error("네트워크 연결 이상");
     }
@@ -624,7 +632,7 @@ async function mutateState(mutateFn) {
   for (let attempt = 0; attempt < MAX_RETRY; attempt++) {
     try {
       // 1) 최신 상태 + ETag(현재 버전표) 함께 읽기
-      const getResponse = await fetch(FIREBASE_DB_URL, {
+      const getResponse = await fetch(authedDbUrl(), {
         headers: { "X-Firebase-ETag": "true" }
       });
       if (!getResponse.ok) {
@@ -643,7 +651,7 @@ async function mutateState(mutateFn) {
 
       // 3) 읽었던 버전(ETag)이 그대로일 때만 쓰기 시도 (Compare-And-Swap)
       //    데이터가 아예 없던 최초 상태였다면 Firebase 규약상 'null_etag'를 사용해야 함
-      const putResponse = await fetch(FIREBASE_DB_URL, {
+      const putResponse = await fetch(authedDbUrl(), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -1679,6 +1687,7 @@ function escapeHtml(value) {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-messaging.js";
+import { getAuth, signInAnonymously, onIdTokenChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDwx5WBh4UMR9oUGv5YOiPApnOavUko-zM",
@@ -1694,6 +1703,15 @@ const firebaseConfig = {
 const VAPID_KEY = "BJBTVSXE_4hjblqmXUg_F_pehONxq6zVIN5rgs2u0dCdYxmlIG-nciKzJkX5TD19R0zQwoDq_ECeBkNLA_QUAZY";
 
 const app = initializeApp(firebaseConfig);
+
+// 방문자를 자동으로 "익명 사용자"로 로그인시켜서, Database 규칙이
+// "로그인한 사람만 허용"으로 바뀌어도 이 웹앱은 그대로 작동하게 해준다.
+const auth = getAuth(app);
+window.firebaseIdToken = null;
+signInAnonymously(auth).catch((e) => console.error("익명 로그인 실패:", e));
+onIdTokenChanged(auth, async (user) => {
+  window.firebaseIdToken = user ? await user.getIdToken() : null;
+});
 let messaging = null;
 
 async function getServiceWorkerRegistration() {
