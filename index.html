@@ -619,13 +619,22 @@ function findNextInLine(bookings) {
   return getOrderedWaitingList(bookings)[0] || null;
 }
 
-async function mutateState(mutateFn) {
+async function mutateState(mutateFn, options = {}) {
+  const requireAdmin = !!options.requireAdmin;
+
   document.getElementById('connectionStatus').innerHTML = `
     <span class="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-semibold text-amber-400 bg-amber-400/10 ring-1 ring-inset ring-amber-400/20">
       <span class="h-1.5 w-1.5 rounded-full bg-amber-400 pulse-active"></span>
       업데이트 전송중
     </span>
   `;
+
+  if (requireAdmin && !getAdminToken()) {
+    alert("관리자 인증이 만료되었습니다. PIN을 다시 입력해 주세요.");
+    clearAdminSession();
+    renderUI();
+    return false;
+  }
 
   const MAX_RETRY = 9;
 
@@ -649,7 +658,31 @@ async function mutateState(mutateFn) {
       const nextState = mutateFn(JSON.parse(JSON.stringify(currentState)));
       nextState.updatedAt = Date.now().toString();
 
-      // 3) 읽었던 버전(ETag)이 그대로일 때만 쓰기 시도 (Compare-And-Swap)
+      if (requireAdmin) {
+        // 관리자 전용 작업: PIN으로 발급받은 토큰을 들고 서버 함수를 통해서만 저장한다.
+        // 서버가 토큰을 다시 검증하므로, 브라우저 콘솔 조작으로는 우회할 수 없다.
+        const writeResponse = await fetch("/.netlify/functions/admin-write", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: getAdminToken(), nextState })
+        });
+
+        if (writeResponse.status === 401) {
+          alert("관리자 인증이 만료되었습니다. PIN을 다시 입력해 주세요.");
+          clearAdminSession();
+          renderUI();
+          return false;
+        }
+        if (!writeResponse.ok) {
+          throw new Error("서버 상태 저장 실패");
+        }
+
+        localState = nextState;
+        renderUI();
+        return true;
+      }
+
+      // 3) 일반(비관리자) 작업: 읽었던 버전(ETag)이 그대로일 때만 쓰기 시도 (Compare-And-Swap)
       //    데이터가 아예 없던 최초 상태였다면 Firebase 규약상 'null_etag'를 사용해야 함
       const putResponse = await fetch(authedDbUrl(), {
         method: "PUT",
@@ -695,15 +728,31 @@ function toggleThemeMode() {
   renderUI();
 }
 
-// 관리자 모드 / 국장님 화면 공용 접근 PIN. 실서비스 배포 시 이 값을 직접 바꿔서 사용하세요.
-const ACCESS_PIN = "1379";
+// PIN은 더 이상 여기(브라우저 코드)에 적지 않습니다.
+// 실제 검증은 Netlify 함수(verify-pin)가 서버에서 수행하고,
+// 맞으면 서명된 임시 토큰을 내려줘서 그 토큰이 있어야만 관리자 저장이 허용됩니다.
 let pendingPinAction = null;
 
-// localStorage에 인증 여부를 저장하므로, 한 번 맞게 입력하면 이 기기에서는
-// 다시 묻지 않습니다. (이전 버전은 sessionStorage라 매번 다시 떴던 문제 수정)
+function getAdminToken() {
+  const token = localStorage.getItem('adminToken');
+  const expiresAt = Number(localStorage.getItem('adminTokenExpiresAt') || 0);
+  return (token && Date.now() < expiresAt) ? token : null;
+}
+
+function clearAdminSession() {
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminTokenExpiresAt');
+  localStorage.removeItem('accessPinVerified');
+  isAdminMode = false;
+  isDirectorMode = false;
+  localStorage.setItem('isAdminMode', 'false');
+  localStorage.setItem('isDirectorMode', 'false');
+}
+
+// localStorage에 토큰을 저장하므로, 한 번 맞게 입력하면 이 기기에서는
+// 토큰 만료(12시간) 전까지 다시 묻지 않습니다.
 function verifyAccessPin(action) {
-  const alreadyVerified = localStorage.getItem('accessPinVerified') === 'true';
-  if (alreadyVerified) return true;
+  if (getAdminToken()) return true;
 
   pendingPinAction = action;
   document.getElementById('pinInput').value = "";
@@ -718,20 +767,38 @@ function closePinModal() {
   pendingPinAction = null;
 }
 
-function submitPin() {
+async function submitPin() {
   const val = document.getElementById('pinInput').value;
-  if (val !== ACCESS_PIN) {
-    document.getElementById('pinError').classList.remove('hidden');
-    document.getElementById('pinInput').value = "";
-    document.getElementById('pinInput').focus();
-    return;
+  const errorEl = document.getElementById('pinError');
+  errorEl.classList.add('hidden');
+
+  try {
+    const response = await fetch("/.netlify/functions/verify-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: val })
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || !result.ok || !result.token) {
+      errorEl.classList.remove('hidden');
+      document.getElementById('pinInput').value = "";
+      document.getElementById('pinInput').focus();
+      return;
+    }
+
+    localStorage.setItem('adminToken', result.token);
+    localStorage.setItem('adminTokenExpiresAt', String(result.expiresAt));
+    localStorage.setItem('accessPinVerified', 'true');
+    document.getElementById('pinOverlay').classList.add('hidden');
+    const action = pendingPinAction;
+    pendingPinAction = null;
+    if (action === 'admin') toggleAdminMode(true);
+    else if (action === 'director') toggleDirectorMode(true);
+  } catch (error) {
+    console.error("PIN 확인 중 오류:", error);
+    errorEl.classList.remove('hidden');
   }
-  localStorage.setItem('accessPinVerified', 'true');
-  document.getElementById('pinOverlay').classList.add('hidden');
-  const action = pendingPinAction;
-  pendingPinAction = null;
-  if (action === 'admin') toggleAdminMode(true);
-  else if (action === 'director') toggleDirectorMode(true);
 }
 
 function toggleDirectorMode(forceState = null) {
@@ -1241,7 +1308,7 @@ async function adminCallNext() {
     }
 
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     if (deferredDueToAway) {
@@ -1278,7 +1345,7 @@ async function adminCompleteCurrent() {
     }
 
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     if (deferredDueToAway) {
@@ -1297,7 +1364,7 @@ async function adminDismissSpecific(id) {
   const success = await mutateState((freshState) => {
     freshState.bookings = freshState.bookings.filter(b => b.id !== id);
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) alert("삭제 처리되었습니다.");
 }
@@ -1312,7 +1379,7 @@ async function adminEscalateToUrgent(id) {
       target.escalatedAt = Date.now();
     }
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     alert("긴급 처리되었습니다. 대기열에서 다음 순서로 우선 호출됩니다.");
@@ -1330,7 +1397,7 @@ async function adminCancelUrgent(id) {
       target.escalatedAt = null;
     }
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) alert("긴급 지정이 해제되었습니다.");
 }
@@ -1341,7 +1408,7 @@ async function adminResetAll() {
   const success = await mutateState((freshState) => {
     freshState.bookings = [];
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) alert("전체 데이터가 리셋되었습니다.");
 }
@@ -1388,7 +1455,7 @@ async function adminSimulateQueue() {
 
     freshState.bookings = [...freshState.bookings, ...demoItems];
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) alert("테스트용 대기열이 생성되었습니다.");
 }
@@ -1531,7 +1598,7 @@ async function confirmSetDirectorAway() {
       setBy
     };
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     closeDirectorStatusModal();
@@ -1572,7 +1639,7 @@ async function confirmDirectorReturn() {
 
     freshState.__justPromotedOnReturn = promoted;
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     closeDirectorStatusModal();
@@ -1609,7 +1676,7 @@ async function registerThisDeviceAsDeputy() {
     ensureDirectorStatusDefaults(freshState);
     freshState.deputyFcmToken = token;
     return freshState;
-  });
+  }, { requireAdmin: true });
 
   if (success) {
     alert("이 기기가 대리 수신자로 등록되었습니다.\n국장님 부재중 전환 시 이 기기로 알림이 전달됩니다.");
