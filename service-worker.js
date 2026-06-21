@@ -62,8 +62,11 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  if (url.hostname.includes("firebaseio.com")) {
-    event.respondWith(fetch(event.request));
+  // Firebase Realtime Database, FCM 등록(fcmregistrations.googleapis.com),
+  // Firebase Installations 같은 구글 API 호출은 서비스워커가 가로채지 않고
+  // 그대로 통과시킨다. 가로채서 fetch(event.request)로 다시 보내면 그 과정에서
+  // 인증 관련 정보가 깨져서 FCM 토큰 발급이 401로 실패하는 문제가 있었다.
+  if (url.hostname.includes("firebaseio.com") || url.hostname.endsWith("googleapis.com")) {
     return;
   }
 
