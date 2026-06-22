@@ -1,0 +1,14 @@
+[index.html]
+old ryuso-af2f2 count: 0
+old sender 482986904758 count: 0
+new project count: 5
+new sender count: 2
+new apiKey count: 1
+new VAPID count: 1
+
+[service-worker.js]
+old ryuso-af2f2 count: 0
+old sender 482986904758 count: 0
+new project count: 4
+new sender count: 2
+new apiKey count: 1
