@@ -246,6 +246,88 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 .director-view .director-hide {
   display: none !important;
 }
+
+/* ===== 화이트 모드: 관리자 통제 패널 전용 가독성 개선 =====
+   적용 범위: #adminCard 내부만
+   비적용 범위: 현재 보고 박스, 대기열 카드, 내 예약 카드, 국장님 화면
+*/
+body.light-mode #adminCard {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%) !important;
+  border: 1px solid #C4B5FD !important;
+  box-shadow: 0 14px 34px rgba(91, 75, 122, 0.16) !important;
+}
+
+body.light-mode #adminCard h2 {
+  color: #5B21B6 !important;
+}
+
+body.light-mode #adminCard > p {
+  color: #4C1D95 !important;
+}
+
+/* 관리자 패널 내부 구분선 */
+body.light-mode #adminCard .h-px.bg-gray-800 {
+  background-color: #DDD6FE !important;
+}
+
+/* 관리자 패널 내부 보조 설명/소제목 */
+body.light-mode #adminCard p.text-xs,
+body.light-mode #adminCard .text-gray-300,
+body.light-mode #adminCard .text-gray-400,
+body.light-mode #adminCard .text-gray-500 {
+  color: #5B4B7A !important;
+}
+
+/* 전체 리셋 버튼 */
+body.light-mode #adminCard button.bg-red-500\/10 {
+  background: #FEF2F2 !important;
+  color: #991B1B !important;
+  border-color: #FCA5A5 !important;
+}
+body.light-mode #adminCard button.bg-red-500\/10:hover {
+  background: #FEE2E2 !important;
+}
+
+/* 테스트용 대기열 자동 생성 버튼 */
+body.light-mode #adminCard button.bg-indigo-500\/10 {
+  background: #EEF2FF !important;
+  color: #3730A3 !important;
+  border-color: #A5B4FC !important;
+}
+body.light-mode #adminCard button.bg-indigo-500\/10:hover {
+  background: #E0E7FF !important;
+}
+
+/* 국장님 부재중 상태 설정 버튼 */
+body.light-mode #adminCard button.bg-amber-500\/10 {
+  background: #FFF7ED !important;
+  color: #92400E !important;
+  border-color: #FDBA74 !important;
+}
+body.light-mode #adminCard button.bg-amber-500\/10:hover {
+  background: #FFEDD5 !important;
+}
+
+/* 대리 수신자 등록 버튼 */
+body.light-mode #adminCard button.bg-sky-500\/10 {
+  background: #EFF6FF !important;
+  color: #1D4ED8 !important;
+  border-color: #93C5FD !important;
+}
+body.light-mode #adminCard button.bg-sky-500\/10:hover {
+  background: #DBEAFE !important;
+}
+
+/* 부재중 이력 펼침 영역 */
+body.light-mode #adminCard #awayLogContainer {
+  background: rgba(255,255,255,0.74) !important;
+  border-radius: 12px !important;
+}
+
+body.light-mode #adminCard #awayLogArrow {
+  color: #6D28D9 !important;
+}
+
 </style>
 </head>
 
@@ -1757,17 +1839,17 @@ import { getMessaging, getToken, onMessage, isSupported } from "https://www.gsta
 import { getAuth, signInAnonymously, onIdTokenChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDwx5WBh4UMR9oUGv5YOiPApnOavUko-zM",
-  authDomain: "ryuso-af2f2.firebaseapp.com",
-  databaseURL: "https://ryuso-af2f2-default-rtdb.firebaseio.com",
-  projectId: "ryuso-af2f2",
-  storageBucket: "ryuso-af2f2.firebasestorage.app",
-  messagingSenderId: "482986904758",
-  appId: "1:482986904758:web:46216cfea61f04d12f2a17",
+  apiKey: "AIzaSyDrKIGNhnSHRbYj0aPzCUdvk3eZMgoEOW4",
+  authDomain: "reportflowincomeenergy.firebaseapp.com",
+  databaseURL: "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "reportflowincomeenergy",
+  storageBucket: "reportflowincomeenergy.firebasestorage.app",
+  messagingSenderId: "120114688919",
+  appId: "1:120114688919:web:08644922957c82b8adcad2",
   measurementId: "G-82ZT77J5FM"
 };
 
-const VAPID_KEY = "BJBTVSXE_4hjblqmXUg_F_pehONxq6zVIN5rgs2u0dCdYxmlIG-nciKzJkX5TD19R0zQwoDq_ECeBkNLA_QUAZY";
+const VAPID_KEY = "BLLtjpPVz7jnsvTmId7qo1hfrAXvWzFVRI9hHAJ6Qi1-4k5VTfoT0io_l0LQxCUX2uHxdknmvSxBqWOcs5LTkio";
 
 const app = initializeApp(firebaseConfig);
 
