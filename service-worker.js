@@ -2,14 +2,13 @@ importScripts("https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"
 importScripts("https://www.gstatic.com/firebasejs/11.9.1/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "AIzaSyDwx5WBh4UMR9oUGv5YOiPApnOavUko-zM",
-  authDomain: "ryuso-af2f2.firebaseapp.com",
-  databaseURL: "https://ryuso-af2f2-default-rtdb.firebaseio.com",
-  projectId: "ryuso-af2f2",
-  storageBucket: "ryuso-af2f2.firebasestorage.app",
-  messagingSenderId: "482986904758",
-  appId: "1:482986904758:web:46216cfea61f04d12f2a17",
-  measurementId: "G-82ZT77J5FM"
+  apiKey: "AIzaSyDrKIGNhnSHRbYj0aPzCUdvk3eZMgoEOW4",
+  authDomain: "reportflowincomeenergy.firebaseapp.com",
+  databaseURL: "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "reportflowincomeenergy",
+  storageBucket: "reportflowincomeenergy.firebasestorage.app",
+  messagingSenderId: "120114688919",
+  appId: "1:120114688919:web:08644922957c82b8adcad2"
 });
 
 const messaging = firebase.messaging();

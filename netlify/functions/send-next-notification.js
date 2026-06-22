@@ -75,7 +75,7 @@ exports.handler = async (event) => {
           requireInteraction: true,
         },
         fcmOptions: {
-          link: "https://reportflowincomeenergy-git.netlify.app/",
+          link: "https://mafraincomeenergy.netlify.app/",
         },
       },
       data: {
