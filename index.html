@@ -64,83 +64,91 @@ body {
   animation: pulse-ring 2s infinite ease-in-out;
 }
 
-/* ===== 화이트 모드 (파스텔톤) ===== */
+/* ===== 화이트 모드 — 팔레트: #CDF0EA #F9F9F9 #F7DBF0 #BEAEE2 ===== */
 body.light-mode {
-  background: linear-gradient(135deg,#FFF1F2 0%,#FDF4FF 25%,#EEF2FF 50%,#ECFEFF 75%,#F0FDF4 100%);
-  color: #5B4B7A;
+  background: linear-gradient(135deg,#F7DBF0 0%,#F9F9F9 35%,#CDF0EA 70%,#EEF9F7 100%);
+  color: #3D2E6B;
 }
 body.light-mode header {
-  background: rgba(255,255,255,0.92) !important; backdrop-filter: blur(12px);
-  border-color: #E9D8FD !important;
+  background: rgba(249,249,249,0.95) !important;
+  backdrop-filter: blur(12px);
+  border-color: #DECCF0 !important;
 }
 body.light-mode footer {
-  background: rgba(255,255,255,0.95) !important;
-  border-color: #E9D8FD !important;
+  background: rgba(249,249,249,0.98) !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode .bg-slate-950,
 body.light-mode .bg-slate-900,
 body.light-mode .bg-slate-800,
 body.light-mode .bg-gray-800 {
-  background: rgba(255,255,255,0.88) !important;
+  background: rgba(249,249,249,0.90) !important;
 }
 body.light-mode .bg-slate-950\/50,
 body.light-mode .bg-slate-950\/30 {
-  background: rgba(255,255,255,0.65) !important;
+  background: rgba(249,249,249,0.70) !important;
 }
 body.light-mode .bg-slate-900\/60 {
-  background: rgba(255,255,255,0.92) !important;
+  background: rgba(249,249,249,0.92) !important;
 }
 body.light-mode .border-gray-800,
 body.light-mode .border-gray-900\/40,
 body.light-mode .border-slate-700\/80 {
-  border-color: #E9D8FD !important;
+  border-color: #DECCF0 !important;
+}
+/* 헤더 버튼 테두리 */
+body.light-mode .border-gray-700\/80,
+body.light-mode .border-gray-700 {
+  border-color: #DECCF0 !important;
 }
 body.light-mode .text-white,
 body.light-mode .text-slate-200 {
-  color: #4C3575 !important;
+  color: #3D2E6B !important;
 }
 body.light-mode .text-gray-300,
 body.light-mode .text-gray-400,
 body.light-mode .text-gray-500,
 body.light-mode .text-gray-600 {
-  color: #8B7AAE !important;
+  color: #7B6BAE !important;
 }
 body.light-mode .text-green-300,
 body.light-mode .text-blue-300,
 body.light-mode .text-emerald-300 {
-  color: #166534 !important;
+  color: #0D6B58 !important;
 }
 body.light-mode #activeDept.bg-green-500\/20,
 body.light-mode #activeDept.bg-blue-500\/20,
 body.light-mode #activeDept.bg-gradient-to-r {
-  background: rgba(255,255,255,0.85) !important;
-  border-color: #BBF7D0 !important;
+  background: #BEAEE2 !important;
+  border-color: #A99BC8 !important;
+  color: #3D2E6B !important;
 }
 body.light-mode input {
-  background: rgba(255,255,255,0.88) !important;
-  color: #4C3575 !important;
-  border-color: #DDD6FE !important;
+  background: rgba(249,249,249,0.92) !important;
+  color: #3D2E6B !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode input::placeholder {
-  color: #C4B5FD !important;
+  color: #BEAEE2 !important;
 }
 body.light-mode .dept-chip:not(.dept-chip-selected) {
-  background: rgba(255,255,255,0.95) !important;
-  color: #7C3AED !important;
-  border-color: #E9D5FF !important;
+  background: rgba(249,249,249,0.95) !important;
+  color: #4A3A8A !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode .dept-chip-selected {
-  background: linear-gradient(135deg,#7C3AED,#6366F1) !important;
+  background: linear-gradient(135deg,#7B67C2,#8B5CF6) !important;
   color: #FFFFFF !important;
   border-color: transparent !important;
 }
 body.light-mode #activeReportingCard {
-  background: linear-gradient(135deg,#FBCFE8 0%,#DDD6FE 50%,#BFDBFE 100%) !important; border:2px solid #C4B5FD !important;
+  background: linear-gradient(135deg,#F7DBF0 0%,#CDF0EA 100%) !important;
+  border: 2px solid #BEAEE2 !important;
 }
 body.light-mode .elapsed-calm {
-  background: rgba(255,255,255,0.75) !important;
-  color: #6B5B95 !important;
-  border-color: #DDD6FE !important;
+  background: rgba(249,249,249,0.85) !important;
+  color: #4A3A8A !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode .elapsed-caution {
   background: #FEF3C7 !important;
@@ -153,29 +161,29 @@ body.light-mode .elapsed-long {
   border-color: #FDA4AF !important;
 }
 body.light-mode .light-card {
-  background: #FFFFFF !important;
-  border-color: #EDE0FB !important;
+  background: #F9F9F9 !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode .queue-item-normal {
-  background: rgba(255,255,255,0.88) !important;
-  border-color: #EDE0FB !important;
+  background: rgba(249,249,249,0.90) !important;
+  border-color: #DECCF0 !important;
 }
 body.light-mode .queue-number-normal {
-  background: linear-gradient(135deg,#F9A8D4,#C4B5FD,#93C5FD) !important;
-  color: white !important;
+  background: linear-gradient(135deg,#F7DBF0,#BEAEE2) !important;
+  color: #3D2E6B !important;
 }
 body.light-mode .queue-item-urgent {
   background: #FFF1F2 !important;
-  border-color: #FB7185 !important;
+  border-color: #FDA4AF !important;
 }
 body.light-mode .queue-item-urgent .text-rose-300 {
   color: #BE123C !important;
 }
 body.light-mode .queue-item-urgent .bg-rose-500\/20 {
-  background: rgba(244,63,94,0.15) !important;
+  background: rgba(244,63,94,0.12) !important;
 }
 
-/* ===== 국장님 부재중 상태 - 화이트 모드 전용 보정 ===== */
+/* ===== 국장님 부재중 — 화이트 모드 ===== */
 body.light-mode .bg-amber-950\/20 {
   background: linear-gradient(135deg,#FEF3C7 0%,#FFE8CC 100%) !important;
 }
@@ -183,17 +191,17 @@ body.light-mode .border-amber-500\/40 {
   border-color: #FBBF24 !important;
 }
 body.light-mode .border-amber-500\/20 {
-  border-color: #FDE6B4 !important;
+  border-color: #FDE68A !important;
 }
 body.light-mode .text-amber-300,
 body.light-mode .text-amber-400 {
   color: #92400E !important;
 }
 body.light-mode .bg-amber-500\/10 {
-  background: rgba(245,158,11,0.16) !important;
+  background: rgba(245,158,11,0.14) !important;
 }
 body.light-mode .bg-sky-500\/10 {
-  background: rgba(14,165,233,0.14) !important;
+  background: rgba(14,165,233,0.12) !important;
 }
 body.light-mode .border-sky-500\/20 {
   border-color: #BAE6FD !important;
@@ -202,7 +210,7 @@ body.light-mode .text-sky-300 {
   color: #0369A1 !important;
 }
 body.light-mode #directorStatusCard {
-  box-shadow: 0 1px 2px rgba(91,75,122,0.08);
+  box-shadow: 0 1px 3px rgba(61,46,107,0.08);
 }
 
 body.light-mode .always-white-text,
@@ -210,35 +218,72 @@ body.light-mode .always-white-text * {
   color: #FFFFFF !important;
 }
 body.light-mode #myBookingCard {
-  background: linear-gradient(135deg,#D1FAE5 0%,#FFFFFF 60%) !important;
-  border-color: #6EE7B7 !important;
+  background: linear-gradient(135deg,#CDF0EA 0%,#F9F9F9 60%) !important;
+  border-color: #7DCFBE !important;
 }
 body.light-mode #myBookingCard .text-white {
-  color: #166534 !important;
+  color: #0D6B58 !important;
 }
 body.light-mode #myBookingBadge,
 body.light-mode #myBookingCard .bg-emerald-500\/10,
 body.light-mode #myBookingCard .bg-emerald-500\/20 {
-  background: rgba(16,185,129,0.18) !important;
+  background: rgba(16,185,129,0.16) !important;
   color: #047857 !important;
 }
 
 /* ===== 국장님 화면 ===== */
 .director-view #activeReporterBox {
-  min-height: 260px;
+  min-height: 280px;
 }
+/* 과 배지: 기존 text-sm(14px) + 10pt = 24px */
+.director-view #activeDept {
+  font-size: 24px !important;
+  letter-spacing: normal !important;
+  padding: 6px 24px !important;
+}
+/* 보고자 이름: 기존 clamp(2rem~4.5rem) + 0.625rem = clamp(2.625rem~5.125rem) */
 .director-view #activeName {
-  font-size: clamp(2rem, 4vw, 4.5rem);
+  font-size: clamp(2.625rem, 4.8vw, 5.125rem) !important;
   letter-spacing: 0.1em !important;
 }
+/* 보고 제목: 기존 clamp(1rem~1.75rem) + 0.625rem = clamp(1.625rem~2.375rem) */
 .director-view #activeTitle {
-  font-size: clamp(1rem, 2vw, 1.75rem);
+  font-size: clamp(1.625rem, 2.5vw, 2.375rem) !important;
   letter-spacing: normal;
   line-height: 1.5;
   max-width: 90%;
 }
-.director-view #activeDept {
-  letter-spacing: normal !important;
+/* 경과 시간: 기존 text-xs(12px) + 10pt = 22px */
+.director-view #elapsedTimeBox {
+  font-size: 22px !important;
+  padding: 6px 18px !important;
+  border-radius: 30px !important;
+}
+/* 대기열: 과명 text-sm(14px) + 10pt = 24px */
+.director-view #queueList h4 {
+  font-size: 24px !important;
+}
+/* 대기열: 보고자명 text-xs(12px) + 10pt = 22px */
+.director-view #queueList .font-mono {
+  font-size: 22px !important;
+}
+/* 대기열: 보고 제목 text-xs(12px) + 10pt = 22px */
+.director-view #queueList p {
+  font-size: 22px !important;
+}
+/* 대기열: 순번 뱃지 text-xs(12px) + 10pt = 22px */
+.director-view #queueList .h-8.w-8 {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 20px !important;
+}
+/* 대기열: 긴급/내예약 뱃지 text-[10px] + 10pt = 20px */
+.director-view #queueList .text-\[10px\] {
+  font-size: 20px !important;
+}
+/* 대기열: 시간 표시 text-[10px] + 10pt = 20px */
+.director-view #queueList .text-gray-600 {
+  font-size: 20px !important;
 }
 .director-view #queueList {
   max-height: 650px;
@@ -248,26 +293,25 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 }
 
 /* ===== 화이트 모드: 관리자 통제 패널 전용 가독성 개선 =====
-   적용 범위: #adminCard 내부만
-   비적용 범위: 현재 보고 박스, 대기열 카드, 내 예약 카드, 국장님 화면
+   팔레트: #CDF0EA #F9F9F9 #F7DBF0 #BEAEE2
 */
 body.light-mode #adminCard {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%) !important;
-  border: 1px solid #C4B5FD !important;
-  box-shadow: 0 14px 34px rgba(91, 75, 122, 0.16) !important;
+  background: linear-gradient(135deg, #F9F9F9 0%, #F7DBF0 100%) !important;
+  border: 1px solid #BEAEE2 !important;
+  box-shadow: 0 14px 34px rgba(61,46,107,0.12) !important;
 }
 
 body.light-mode #adminCard h2 {
-  color: #5B21B6 !important;
+  color: #3D2E6B !important;
 }
 
 body.light-mode #adminCard > p {
-  color: #4C1D95 !important;
+  color: #4A3A8A !important;
 }
 
 /* 관리자 패널 내부 구분선 */
 body.light-mode #adminCard .h-px.bg-gray-800 {
-  background-color: #DDD6FE !important;
+  background-color: #DECCF0 !important;
 }
 
 /* 관리자 패널 내부 보조 설명/소제목 */
@@ -275,27 +319,27 @@ body.light-mode #adminCard p.text-xs,
 body.light-mode #adminCard .text-gray-300,
 body.light-mode #adminCard .text-gray-400,
 body.light-mode #adminCard .text-gray-500 {
-  color: #5B4B7A !important;
+  color: #7B6BAE !important;
 }
 
 /* 전체 리셋 버튼 */
 body.light-mode #adminCard button.bg-red-500\/10 {
-  background: #FEF2F2 !important;
-  color: #991B1B !important;
-  border-color: #FCA5A5 !important;
+  background: #FFF1F2 !important;
+  color: #9F1239 !important;
+  border-color: #FDA4AF !important;
 }
 body.light-mode #adminCard button.bg-red-500\/10:hover {
-  background: #FEE2E2 !important;
+  background: #FFE4E6 !important;
 }
 
 /* 테스트용 대기열 자동 생성 버튼 */
 body.light-mode #adminCard button.bg-indigo-500\/10 {
-  background: #EEF2FF !important;
-  color: #3730A3 !important;
-  border-color: #A5B4FC !important;
+  background: #F7DBF0 !important;
+  color: #3D2E6B !important;
+  border-color: #BEAEE2 !important;
 }
 body.light-mode #adminCard button.bg-indigo-500\/10:hover {
-  background: #E0E7FF !important;
+  background: #EEDCF8 !important;
 }
 
 /* 국장님 부재중 상태 설정 버튼 */
@@ -310,22 +354,22 @@ body.light-mode #adminCard button.bg-amber-500\/10:hover {
 
 /* 대리 수신자 등록 버튼 */
 body.light-mode #adminCard button.bg-sky-500\/10 {
-  background: #EFF6FF !important;
-  color: #1D4ED8 !important;
-  border-color: #93C5FD !important;
+  background: #CDF0EA !important;
+  color: #0D6B58 !important;
+  border-color: #7DCFBE !important;
 }
 body.light-mode #adminCard button.bg-sky-500\/10:hover {
-  background: #DBEAFE !important;
+  background: #B0E8DF !important;
 }
 
 /* 부재중 이력 펼침 영역 */
 body.light-mode #adminCard #awayLogContainer {
-  background: rgba(255,255,255,0.74) !important;
+  background: rgba(249,249,249,0.80) !important;
   border-radius: 12px !important;
 }
 
 body.light-mode #adminCard #awayLogArrow {
-  color: #6D28D9 !important;
+  color: #4A3A8A !important;
 }
 
 </style>
@@ -536,6 +580,12 @@ body.light-mode #adminCard #awayLogArrow {
 <div class="h-10 w-10 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-300 text-lg font-black" id="myBookingBadge">
 -
 </div>
+</div>
+<div id="urgentRequestSection" class="mt-3 hidden">
+<button onclick="openUrgentModal()" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-rose-950/40 hover:bg-rose-950/60 border border-rose-500/40 hover:border-rose-500/70 rounded-xl text-rose-300 text-xs font-bold transition-all">
+🚨 긴급 보고 신청
+</button>
+<p id="urgentRequestedMsg" class="hidden mt-2 text-center text-xs text-amber-400 font-semibold">⏳ 긴급 신청이 접수되었습니다. 관리자 승인을 기다려 주세요.</p>
 </div>
 </div>
 </div>
@@ -807,6 +857,9 @@ function toggleThemeMode() {
   const isLight = document.body.classList.contains('light-mode');
   localStorage.setItem('themeMode', isLight ? 'light' : 'dark');
   document.getElementById('themeToggleBtn').innerText = isLight ? '다크 모드' : '화이트 모드';
+  // meta theme-color 업데이트
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.content = isLight ? '#F9F9F9' : '#0B0F19';
   renderUI();
 }
 
@@ -842,6 +895,96 @@ function verifyAccessPin(action) {
   document.getElementById('pinOverlay').classList.remove('hidden');
   document.getElementById('pinInput').focus();
   return false;
+}
+
+
+// ===== 긴급 신청 관련 함수 =====
+
+function openUrgentModal() {
+  const myIdStr = localStorage.getItem('my_booking_id');
+  if (!myIdStr) { alert('먼저 대기 예약을 등록해야 합니다.'); return; }
+  document.getElementById('urgentReasonInput').value = '';
+  document.getElementById('urgentModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('urgentReasonInput').focus(), 100);
+}
+
+function closeUrgentModal() {
+  document.getElementById('urgentModal').classList.add('hidden');
+}
+
+async function submitUrgentRequest() {
+  const reason = document.getElementById('urgentReasonInput').value.trim();
+  if (!reason) { alert('긴급 사유를 반드시 작성해 주세요.'); return; }
+
+  const myIdStr = localStorage.getItem('my_booking_id');
+  if (!myIdStr) { alert('예약 정보를 찾을 수 없습니다.'); return; }
+  const myId = parseInt(myIdStr, 10);
+
+  // 1. DB에 urgentRequested 플래그와 사유 저장 (관리자만 볼 수 있음)
+  const success = await mutateState((freshState) => {
+    const target = freshState.bookings.find(b => b.id === myId && b.status === 'WAITING');
+    if (target) {
+      target.urgentRequested = true;
+      target.urgentReason = reason;  // 관리자 전용
+      target.urgentRequestedAt = Date.now();
+    }
+    return freshState;
+  });
+
+  if (!success) { alert('오류가 발생했습니다. 다시 시도해 주세요.'); return; }
+
+  // 2. 전체 공지 (모든 사용자 화면에 표시)
+  if (localState) {
+    const myBooking = localState.bookings.find(b => b.id === myId);
+    // Netlify 함수로 관리자에게 FCM 알림 발송
+    try {
+      await fetch('/.netlify/functions/notify-urgent-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: myId,
+          department: myBooking?.department || '',
+          reporterName: myBooking?.reporterName || '',
+          urgentReason: reason
+        })
+      });
+    } catch(e) { console.warn('urgent push failed', e); }
+  }
+
+  closeUrgentModal();
+  // renderUI()가 updateMyBookingUI()를 호출해 버튼 상태를 DB 기준으로 자동 갱신함
+  playChime();
+  alert('긴급 신청이 접수되었습니다.\n관리자 검토 후 처리됩니다.');
+}
+
+// 관리자: 긴급 신청 승인 (기존 adminEscalateToUrgent와 유사하지만 urgentRequested 해제)
+async function adminApproveUrgent(id) {
+  if (!confirm('긴급 신청을 승인하여 대기열 최우선으로 올리겠습니까?')) return;
+  const success = await mutateState((freshState) => {
+    const target = freshState.bookings.find(b => b.id === id && b.status === 'WAITING');
+    if (target) {
+      target.isUrgent = true;
+      target.escalatedAt = Date.now();
+      target.urgentRequested = false;  // 신청 상태 해제 (이미 처리됨)
+    }
+    return freshState;
+  }, { requireAdmin: true });
+  if (success) { alert('긴급 승인 완료. 대기열 최우선으로 이동되었습니다.'); playChime(); }
+}
+
+// 관리자: 긴급 신청 거절
+async function adminRejectUrgent(id) {
+  if (!confirm('긴급 신청을 거절하시겠습니까?')) return;
+  const success = await mutateState((freshState) => {
+    const target = freshState.bookings.find(b => b.id === id);
+    if (target) {
+      target.urgentRequested = false;
+      target.urgentReason = null;
+      target.urgentRequestedAt = null;
+    }
+    return freshState;
+  }, { requireAdmin: true });
+  if (success) alert('긴급 신청이 거절되었습니다.');
 }
 
 function closePinModal() {
@@ -1014,12 +1157,24 @@ function renderUI() {
             : `<button onclick="adminEscalateToUrgent(${item.id})" class="p-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-md transition ml-1" title="긴급으로 끌어올리기">긴급호출</button>`)
         : '';
 
+      // 관리자 전용: 긴급신청 승인/거절 버튼
+      const urgentApproveBtn = (isAdminMode && !isDirectorMode && item.urgentRequested && !item.isUrgent)
+        ? `<button onclick="adminApproveUrgent(${item.id})" class="p-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-md transition ml-1 text-[10px] font-bold" title="긴급 신청 승인">승인</button><button onclick="adminRejectUrgent(${item.id})" class="p-1 text-gray-400 hover:text-gray-300 hover:bg-gray-500/10 rounded-md transition ml-1 text-[10px]" title="긴급 신청 거절">거절</button>`
+        : '';
+
       const adminActions = (isAdminMode && !isDirectorMode)
-        ? `${adminEscalateBtn}<button onclick="adminDismissSpecific(${item.id})" class="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition ml-1" title="이 대기 예약 강제 삭제">삭제</button>`
+        ? `${urgentApproveBtn}${adminEscalateBtn}<button onclick="adminDismissSpecific(${item.id})" class="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition ml-1" title="이 대기 예약 강제 삭제">삭제</button>`
         : `<span class="text-[10px] text-gray-600 font-medium font-mono">${getRelativeTime(item.id)}</span>`;
 
       const urgentBadge = item.isUrgent
         ? '<span class="inline-flex items-center rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300 ring-1 ring-inset ring-rose-500/30">🚨 긴급</span>'
+        : (item.urgentRequested
+          ? '<span class="inline-flex items-center rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 ring-1 ring-inset ring-amber-500/30">⏳ 긴급신청중</span>'
+          : '');
+
+      // 관리자에게만 긴급 신청 사유 표시
+      const urgentReasonBlock = (isAdminMode && !isDirectorMode && item.urgentRequested && item.urgentReason)
+        ? `<p class="text-[10px] text-rose-300 mt-1 font-semibold">📋 긴급사유: ${escapeHtml(item.urgentReason)}</p>`
         : '';
 
       const itemHtml = `
@@ -1036,6 +1191,7 @@ function renderUI() {
                 ${isMe && !isDirectorMode ? '<span class="inline-flex items-center rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-inset ring-emerald-500/20">내 예약</span>' : ''}
               </div>
               <p class="text-xs text-gray-300 mt-1 truncate font-semibold">${escapeHtml(item.title)}</p>
+              ${urgentReasonBlock}
             </div>
           </div>
           <div class="flex items-center ml-2 flex-shrink-0">
@@ -1075,6 +1231,7 @@ function renderUI() {
   renderDirectorStatusUI();
   renderDeputyStatus();
   renderAwayLog();
+  renderUrgentNoticeBanner();
 
   const adminCardEl = document.getElementById('adminCard');
   const quickAdminBoxEl = document.getElementById('quickAdminSection');
@@ -1128,6 +1285,21 @@ function updateMyBookingUI() {
 
     myStatusText.innerText = `대기 중 (현재 내 순번: ${pos}번째)`;
     myBadge.innerText = `${pos}번`;
+
+    // 긴급 신청 버튼 표시 (이미 신청했으면 비활성화)
+    const urgentSection = document.getElementById('urgentRequestSection');
+    const urgentMsg = document.getElementById('urgentRequestedMsg');
+    const urgentBtn = urgentSection ? urgentSection.querySelector('button') : null;
+    if (urgentSection) {
+      urgentSection.classList.remove('hidden');
+      if (myBooking.urgentRequested || myBooking.isUrgent) {
+        if (urgentBtn) { urgentBtn.disabled = true; urgentBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+        if (urgentMsg) urgentMsg.classList.remove('hidden');
+      } else {
+        if (urgentBtn) { urgentBtn.disabled = false; urgentBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        if (urgentMsg) urgentMsg.classList.add('hidden');
+      }
+    }
   } else if (myBooking.status === "REPORTING") {
     myActionBtn.onclick = completeMyReportAndCallNext;
     myActionBtn.innerText = "보고완료";
@@ -1135,6 +1307,8 @@ function updateMyBookingUI() {
     myStatusText.innerHTML = "★ 지금 즉시 국장실로 입장 하세요! ★";
     myStatusText.className = "text-sm font-black text-rose-400 mt-0.5 pulse-active";
     myBadge.innerText = "입장";
+    const urgentSectionR = document.getElementById('urgentRequestSection');
+    if (urgentSectionR) urgentSectionR.classList.add('hidden');
   } else if (myBooking.status === "COMPLETED") {
     myActionBtn.onclick = null;
     myActionBtn.innerText = "완료됨";
@@ -1309,10 +1483,11 @@ async function cancelMyBooking() {
 
 async function triggerPushForCurrentReporting() {
   try {
+    const adminToken = localStorage.getItem('adminToken') || '';
     const response = await fetch("/.netlify/functions/send-next-notification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ source: "director-queue-app", at: Date.now() })
+      body: JSON.stringify({ source: "director-queue-app", at: Date.now(), token: adminToken })
     });
     const result = await response.json().catch(() => ({}));
     console.log("Push notification result", result);
@@ -1542,6 +1717,27 @@ async function adminSimulateQueue() {
   if (success) alert("테스트용 대기열이 생성되었습니다.");
 }
 
+
+function renderUrgentNoticeBanner() {
+  let bannerEl = document.getElementById('urgentNoticeBanner');
+  const urgentPendingList = localState.bookings.filter(b => b.urgentRequested && !b.isUrgent && b.status === 'WAITING');
+
+  if (urgentPendingList.length === 0) {
+    if (bannerEl) bannerEl.remove();
+    return;
+  }
+
+  const names = urgentPendingList.map(b => `${b.department} ${b.reporterName}`).join(', ');
+
+  if (!bannerEl) {
+    bannerEl = document.createElement('div');
+    bannerEl.id = 'urgentNoticeBanner';
+    bannerEl.className = 'fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-rose-800 to-rose-700 text-white text-xs font-bold py-2 px-4 text-center shadow-lg';
+    document.body.prepend(bannerEl);
+  }
+  bannerEl.innerHTML = `🚨 긴급 보고 신청 접수: ${escapeHtml(names)} — 관리자 처리 대기 중`;
+}
+
 function renderDirectorStatusUI() {
   const ds = localState.directorStatus || { available: true };
   const dot = document.getElementById('directorStatusDot');
@@ -1737,10 +1933,11 @@ async function confirmDirectorReturn() {
 
 async function notifyDeputyOfAwayStatus() {
   try {
+    const adminToken = localStorage.getItem('adminToken') || '';
     await fetch("/.netlify/functions/notify-deputy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ at: Date.now() })
+      body: JSON.stringify({ at: Date.now(), token: adminToken })
     });
   } catch (error) {
     console.error("Deputy notify failed", error);
@@ -1960,6 +2157,30 @@ if ("serviceWorker" in navigator) {
 </div>
 
 <button onclick="closeDirectorStatusModal()" class="w-full text-xs text-gray-500 hover:text-gray-300 mt-3 transition">닫기</button>
+</div>
+</div>
+
+<div id="urgentModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+<div class="bg-slate-900 border border-rose-500/40 rounded-2xl p-6 w-full max-w-sm light-card">
+<h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">🚨 긴급 보고 신청</h3>
+<p class="text-xs text-gray-400 mb-4">관리자에게 긴급 보고 요청을 전송합니다.</p>
+
+<div class="bg-rose-950/30 border border-rose-500/30 rounded-xl p-3 mb-4">
+<p class="text-xs text-rose-300 font-bold mb-1">⚠️ 사용 전 반드시 확인하세요</p>
+<ul class="text-xs text-rose-200/80 space-y-1">
+<li>• 긴급 신청 시 <span class="font-bold text-white">전체 대기자에게 공지</span>됩니다.</li>
+<li>• 남용 시 업무 혼선이 발생할 수 있습니다.</li>
+<li>• 승인 여부는 관리자가 결정합니다.</li>
+</ul>
+</div>
+
+<label class="block text-xs font-bold text-gray-300 mb-1.5">긴급 사유 <span class="text-rose-400">*</span></label>
+<textarea id="urgentReasonInput" placeholder="긴급 보고가 필요한 사유를 구체적으로 작성하세요.&#10;(이 내용은 관리자에게만 표시됩니다)" rows="3" class="w-full bg-slate-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white mb-4 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none placeholder-gray-600"></textarea>
+
+<button onclick="submitUrgentRequest()" class="always-white-text w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-3 rounded-xl text-sm transition mb-2">
+긴급 신청 전송
+</button>
+<button onclick="closeUrgentModal()" class="w-full text-xs text-gray-500 hover:text-gray-300 transition">취소</button>
 </div>
 </div>
 
