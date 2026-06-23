@@ -1,0 +1,11 @@
+[index.html]
+wrong API key count: 0
+correct API key count: 1
+projectId reportflowincomeenergy count: 5
+old ryuso-af2f2 count: 0
+
+[service-worker.js]
+wrong API key count: 0
+correct API key count: 1
+projectId reportflowincomeenergy count: 4
+old ryuso-af2f2 count: 0

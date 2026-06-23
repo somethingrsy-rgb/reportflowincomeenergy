@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+
+[build.environment]
+  NODE_VERSION = "22"
+  MISE_DISABLE = "1"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
