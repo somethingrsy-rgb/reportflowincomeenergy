@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { json } = require("./_config");
 
-const TOKEN_TTL_MS = 1000 * 60 * 60 * 12; // 12시간
+const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7일
 
 // 길이가 다른 문자열을 비교할 때도 처리 시간이 일정하도록 맞춰서
 // PIN을 한 글자씩 추측하는 타이밍 공격을 막는다.
