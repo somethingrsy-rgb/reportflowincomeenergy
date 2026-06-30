@@ -126,19 +126,38 @@ function formatDateLabel(dateStr) {
   return `${parseInt(m)}/${parseInt(d)}`;
 }
 
-async function fetchHistory() {
-  if (!idToken) return;
+async function fetchHistory(isRetry = false) {
+  if (!idToken) {
+    // 토큰이 아직 없으면 강제로 한 번 더 받아온다 (새로고침 직후 타이밍 문제 대응)
+    const user = auth.currentUser;
+    if (user) {
+      idToken = await user.getIdToken();
+    } else {
+      return;
+    }
+  }
   try {
     const res = await fetch(HISTORY_URL + "?auth=" + idToken);
-    if (!res.ok) throw new Error("불러오기 실패");
+    if (res.status === 401 && !isRetry) {
+      // 토큰 만료 -> 강제로 새 토큰 발급받아 한 번만 재시도
+      const user = auth.currentUser;
+      if (user) {
+        idToken = await user.getIdToken(true); // true = 강제 갱신
+        return fetchHistory(true);
+      }
+    }
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`불러오기 실패 (status ${res.status}) ${errText}`);
+    }
     const data = await res.json();
     history = data ? Object.values(data) : [];
     document.getElementById('connectionNotice').style.display = 'none';
     render();
   } catch (e) {
-    console.error(e);
+    console.error("fetchHistory error:", e);
     document.getElementById('connectionNotice').style.display = 'block';
-    document.getElementById('connectionNotice').innerText = "데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+    document.getElementById('connectionNotice').innerText = "데이터를 불러오지 못했습니다: " + e.message;
   }
 }
 
@@ -278,7 +297,10 @@ function render() {
 
 function handleExportExcel() {
   const s = window.__statsSnapshot;
-  if (!s) return;
+  if (!s) {
+    alert("아직 불러온 데이터가 없습니다. 화면이 정상적으로 로딩된 후 다시 시도해 주세요.");
+    return;
+  }
 
   const rawRows = history.map(h => ({
     구분: h.type,
