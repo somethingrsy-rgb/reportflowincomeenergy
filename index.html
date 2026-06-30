@@ -224,10 +224,19 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 }
 
 /* ===== 국장님 화면 ===== */
+.director-view #leftDashboardColumn {
+  min-width: 0;
+  width: 100%;
+}
+.director-view #activeReportingCard {
+  min-width: 0;
+  width: 100%;
+}
 .director-view #activeReporterBox {
   min-height: 300px;
   padding: 2rem 1rem;
   width: 100%;
+  min-width: 0;
 }
 .director-view #activeName {
   font-size: clamp(2rem, 4vw, 4.5rem);
@@ -238,6 +247,7 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
   overflow-wrap: break-word;
   white-space: normal;
   max-width: 100%;
+  width: 100%;
 }
 .director-view #activeTitle {
   font-size: clamp(1rem, 2vw, 1.75rem);
@@ -470,10 +480,6 @@ body.light-mode #adminCard #awayLogArrow {
 </button>
 
 <button id="themeToggleBtn" onclick="toggleThemeMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">다크 모드</button>
-
-<button id="notifyBtn" onclick="requestNotificationPermission()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
-알림 활성화
-</button>
 
 <div class="text-right">
 <span id="connectionStatus" class="inline-flex items-center gap-x-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-400/10 ring-1 ring-inset ring-emerald-400/20">
@@ -1079,7 +1085,10 @@ function toggleDirectorMode(forceState = null) {
   if (isDirectorMode) {
     body.classList.add('director-view');
     right.classList.add('hidden');
-    left.className = "lg:col-span-12 flex flex-col gap-6";
+    left.className = "flex flex-col gap-6";
+    left.style.gridColumn = "1 / -1";
+    left.style.minWidth = "0";
+    left.style.width = "100%";
     btn.innerText = "일반 화면";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold transition border border-emerald-600/80";
     subtitle.innerText = "국장님 확인용 대시보드";
@@ -1089,6 +1098,9 @@ function toggleDirectorMode(forceState = null) {
     body.classList.remove('director-view');
     right.classList.remove('hidden');
     left.className = "lg:col-span-7 flex flex-col gap-6";
+    left.style.gridColumn = "";
+    left.style.minWidth = "";
+    left.style.width = "";
     btn.innerText = "국장님 화면";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 text-xs font-bold transition border border-violet-500/80";
     subtitle.innerText = "웹브라우저 모니터링 및 관리자 원격 호출 지원";
@@ -1417,7 +1429,6 @@ async function requestNotificationPermission() {
     const token = await window.initPushNotifications();
     if (token) {
       alert("백그라운드 알림 설정이 활성화되었습니다.");
-      document.getElementById('notifyBtn').innerText = "알림 켜짐";
       playChime();
       return;
     }
