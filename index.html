@@ -13,8 +13,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 <title>국장실 보고 대기 현황 및 예약 시스템</title>
-<script src="./index_files/saved_resource"></script>
-<link rel="stylesheet" as="style" crossorigin="" href="./index_files/pretendard.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" as="style" crossorigin="" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script>
 tailwind.config = {
   darkMode: 'class',
@@ -2227,7 +2227,7 @@ if ("serviceWorker" in navigator) {
 <div id="pinOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
 <div class="bg-slate-900 border border-gray-700 rounded-2xl p-6 w-full max-w-xs light-card text-center">
 <h3 class="text-lg font-bold text-white mb-4">PIN 번호 입력</h3>
-<input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" onkeydown="if(event.key===&#39;Enter&#39;) submitPin()" class="w-full bg-slate-950 border border-gray-800 rounded-xl px-4 py-3 text-lg text-white text-center tracking-[0.5em] mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+<input id="pinInput" type="password" maxlength="20" placeholder="PIN" onkeydown="if(event.key==='Enter') submitPin()" class="w-full bg-slate-950 border border-gray-800 rounded-xl px-4 py-3 text-lg text-white text-center tracking-[0.5em] mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
 <p id="pinError" class="hidden text-xs text-rose-400 mb-3">PIN 번호가 올바르지 않습니다.</p>
 <button onclick="submitPin()" class="always-white-text w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold py-3 rounded-xl text-sm transition mb-3">확인</button>
 <button onclick="closePinModal()" class="w-full text-xs text-gray-500 hover:text-gray-300 transition">취소</button>
