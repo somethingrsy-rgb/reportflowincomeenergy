@@ -17,9 +17,44 @@
   .insight-box { background:linear-gradient(135deg,#3C3489 0%,#534AB7 100%); border-radius:12px; padding:1.25rem 1.5rem; }
   a.back-link { color:#9B93EB; text-decoration:none; font-size:13px; }
   a.back-link:hover { text-decoration:underline; }
+  #pinOverlay {
+    position: fixed; inset: 0; background: rgba(11,15,25,0.97);
+    display: flex; align-items: center; justify-content: center; z-index: 50;
+  }
+  #pinOverlay.hidden { display: none; }
+  #statsContent.hidden { display: none; }
+  #pinBox {
+    background:#161B29; border:1px solid #2A2F3D; border-radius:16px;
+    padding:2rem; width:320px; text-align:center;
+  }
+  #pinBox input {
+    width:100%; margin-top:1rem; padding:0.7rem; border-radius:8px;
+    border:1px solid #2A2F3D; background:#0B0F19; color:#fff;
+    text-align:center; font-size:18px; letter-spacing:0.3em;
+  }
+  #pinBox button {
+    width:100%; margin-top:1rem; padding:0.7rem; border-radius:8px;
+    border:none; background:#3C3489; color:#fff; font-weight:600; cursor:pointer;
+  }
+  #pinError { color:#F87171; font-size:13px; margin-top:0.6rem; display:none; }
 </style>
 </head>
 <body>
+
+<div id="pinOverlay">
+  <div id="pinBox">
+    <div style="font-weight:600; font-size:16px; margin-bottom:4px;">관리자 PIN 확인</div>
+    <div style="font-size:13px; color:#888;">통계 화면은 관리자만 볼 수 있습니다.</div>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" autofocus>
+    <div id="pinError">PIN이 올바르지 않습니다.</div>
+    <button id="pinSubmitBtn">확인</button>
+    <div style="margin-top:1rem;">
+      <a href="./index.html" class="back-link">&larr; 보고 대기 현황으로 돌아가기</a>
+    </div>
+  </div>
+</div>
+
+<div id="statsContent" class="hidden">
 <div style="max-width:960px;margin:0 auto;padding:1.5rem;">
 
   <div style="margin-bottom:1rem;">
@@ -79,6 +114,7 @@
     </div>
   </div>
 
+</div>
 </div>
 
 <script>
@@ -348,14 +384,65 @@ function handleExportExcel() {
 
 document.getElementById('exportBtn').addEventListener('click', handleExportExcel);
 
-auth.onIdTokenChanged(async (user) => {
-  idToken = user ? await user.getIdToken() : null;
-  if (idToken) fetchHistory();
-});
-auth.signInAnonymously().catch(e => console.error("익명 로그인 실패:", e));
+// ----- 관리자 PIN 확인 (index.html과 동일한 토큰을 공유해서, 이미 관리자 모드인 사람은 다시 입력 안 해도 됨) -----
+function getAdminToken() {
+  const token = localStorage.getItem('adminToken');
+  const expiresAt = Number(localStorage.getItem('adminTokenExpiresAt') || 0);
+  return (token && Date.now() < expiresAt) ? token : null;
+}
 
-// 1분마다 자동 새로고침 (대기열 화면처럼 1초 단위까지는 필요 없음)
-setInterval(fetchHistory, 60000);
+function unlockStats() {
+  document.getElementById('pinOverlay').classList.add('hidden');
+  document.getElementById('statsContent').classList.remove('hidden');
+  auth.onIdTokenChanged(async (user) => {
+    idToken = user ? await user.getIdToken() : null;
+    if (idToken) fetchHistory();
+  });
+  auth.signInAnonymously().catch(e => console.error("익명 로그인 실패:", e));
+  setInterval(fetchHistory, 60000);
+}
+
+async function submitStatsPin() {
+  const pin = document.getElementById('pinInput').value;
+  const errorEl = document.getElementById('pinError');
+  errorEl.style.display = 'none';
+
+  try {
+    const res = await fetch("/.netlify/functions/verify-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin })
+    });
+    const result = await res.json().catch(() => ({}));
+
+    if (!res.ok || !result.ok || !result.token) {
+      errorEl.style.display = 'block';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinInput').focus();
+      return;
+    }
+
+    localStorage.setItem('adminToken', result.token);
+    localStorage.setItem('adminTokenExpiresAt', String(result.expiresAt));
+    unlockStats();
+  } catch (e) {
+    console.error(e);
+    errorEl.textContent = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+    errorEl.style.display = 'block';
+  }
+}
+
+document.getElementById('pinSubmitBtn').addEventListener('click', submitStatsPin);
+document.getElementById('pinInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitStatsPin();
+});
+
+// 이미 관리자 모드로 로그인되어 있으면 PIN 다시 안 묻고 바로 통과
+if (getAdminToken()) {
+  unlockStats();
+} else {
+  document.getElementById('pinInput').focus();
+}
 </script>
 </body>
 </html>

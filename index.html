@@ -227,12 +227,17 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 .director-view #activeReporterBox {
   min-height: 300px;
   padding: 2rem 1rem;
+  width: 100%;
 }
 .director-view #activeName {
   font-size: clamp(2rem, 4vw, 4.5rem);
   letter-spacing: 0.1em !important;
   line-height: 1.35;
   margin-bottom: 0.6rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
 }
 .director-view #activeTitle {
   font-size: clamp(1rem, 2vw, 1.75rem);
@@ -241,6 +246,8 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
   max-width: 90%;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .director-view #activeDept {
   letter-spacing: normal !important;
@@ -449,7 +456,7 @@ body.light-mode #adminCard #awayLogArrow {
 </div>
 </div>
 
-<div class="flex flex-wrap items-center gap-2">
+<div class="flex items-center gap-2" style="flex-wrap:nowrap; overflow-x:auto; max-width:100%;">
 <a href="./stats.html" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
 통계 보기
 </a>
@@ -464,7 +471,7 @@ body.light-mode #adminCard #awayLogArrow {
 
 <button id="themeToggleBtn" onclick="toggleThemeMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">다크 모드</button>
 
-<button id="notifyBtn" onclick="requestNotificationPermission()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 text-xs font-bold transition border border-gray-700/80 director-hide">
+<button id="notifyBtn" onclick="requestNotificationPermission()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
 알림 활성화
 </button>
 
