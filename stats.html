@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0B0F19">
+<title>보고 등록 통계</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { darkMode: 'class' };</script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  body { background:#0B0F19; color:#fff; font-family: -apple-system, sans-serif; }
+  .stat-card { background:#161B29; border-radius:8px; padding:1rem; }
+  .insight-box { background:linear-gradient(135deg,#3C3489 0%,#534AB7 100%); border-radius:12px; padding:1.25rem 1.5rem; }
+  a.back-link { color:#9B93EB; text-decoration:none; font-size:13px; }
+  a.back-link:hover { text-decoration:underline; }
+  #pinOverlay {
+    position: fixed; inset: 0; background: rgba(11,15,25,0.97);
+    display: flex; align-items: center; justify-content: center; z-index: 50;
+  }
+  #pinOverlay.hidden { display: none; }
+  #statsContent.hidden { display: none; }
+  #pinBox {
+    background:#161B29; border:1px solid #2A2F3D; border-radius:16px;
+    padding:2rem; width:320px; text-align:center;
+  }
+  #pinBox input {
+    width:100%; margin-top:1rem; padding:0.7rem; border-radius:8px;
+    border:1px solid #2A2F3D; background:#0B0F19; color:#fff;
+    text-align:center; font-size:18px; letter-spacing:0.3em;
+  }
+  #pinBox button {
+    width:100%; margin-top:1rem; padding:0.7rem; border-radius:8px;
+    border:none; background:#3C3489; color:#fff; font-weight:600; cursor:pointer;
+  }
+  #pinError { color:#F87171; font-size:13px; margin-top:0.6rem; display:none; }
+</style>
+</head>
+<body>
+
+<div id="pinOverlay">
+  <div id="pinBox">
+    <div style="font-weight:600; font-size:16px; margin-bottom:4px;">관리자 PIN 확인</div>
+    <div style="font-size:13px; color:#888;">통계 화면은 관리자만 볼 수 있습니다.</div>
+    <input type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" autofocus>
+    <div id="pinError">PIN이 올바르지 않습니다.</div>
+    <button id="pinSubmitBtn">확인</button>
+    <div style="margin-top:1rem;">
+      <a href="./index.html" class="back-link">&larr; 보고 대기 현황으로 돌아가기</a>
+    </div>
+  </div>
+</div>
+
+<div id="statsContent" class="hidden">
+<div style="max-width:960px;margin:0 auto;padding:1.5rem;">
+
+  <div style="margin-bottom:1rem;">
+    <a href="./index.html" class="back-link">&larr; 보고 대기 현황으로 돌아가기</a>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+    <div style="font-size:18px;font-weight:600;">보고 등록 통계</div>
+    <button id="exportBtn" style="display:flex;align-items:center;gap:6px;background:#3C3489;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;">
+      엑셀로 내보내기
+    </button>
+  </div>
+
+  <div id="connectionNotice" style="display:none;font-size:13px;color:#F87171;margin-bottom:1rem;"></div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.75rem;">
+    <div class="stat-card"><div style="font-size:13px;color:#888;">이번 달 누적 등록</div><div id="monthlyTotal" style="font-size:24px;font-weight:600;">-</div></div>
+    <div class="stat-card"><div style="font-size:13px;color:#888;">오늘 등록</div><div id="todayTotal" style="font-size:24px;font-weight:600;">-</div></div>
+    <div class="stat-card"><div style="font-size:13px;color:#888;">평균 처리시간</div><div id="avgProcessing" style="font-size:24px;font-weight:600;">-</div></div>
+    <div class="stat-card"><div style="font-size:13px;color:#888;">최다 분야</div><div id="topCategory" style="font-size:24px;font-weight:600;">-</div></div>
+  </div>
+
+  <div style="font-size:14px;color:#888;margin-bottom:8px;">일별 등록 추이 (최근 14일)</div>
+  <div style="position:relative;width:100%;height:200px;margin-bottom:2rem;">
+    <canvas id="dailyChart"></canvas>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:1.75rem;">
+    <div>
+      <div style="font-size:14px;color:#888;margin-bottom:8px;">분야별 비중</div>
+      <div id="categoryLegend" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:10px;font-size:12px;color:#888;"></div>
+      <div style="position:relative;width:160px;height:160px;margin:0 auto;">
+        <canvas id="catChart"></canvas>
+        <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+          <div id="totalCategoryCount" style="font-size:20px;font-weight:600;">0</div>
+          <div style="font-size:11px;color:#888;">건</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:14px;color:#888;margin-bottom:8px;">분야별 처리 소요시간</div>
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="deptChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-box">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <span style="font-weight:600;color:#EEEDFE;font-size:13px;">이번 주 인사이트</span>
+    </div>
+    <div id="insightText" style="font-size:15px;color:#fff;line-height:1.7;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:20px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.15);">
+      <div><div style="font-size:11px;color:#CECBF6;">전주 대비</div><div id="weekOverWeekVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
+      <div><div style="font-size:11px;color:#CECBF6;">병목 분야</div><div id="bottleneckVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
+      <div><div style="font-size:11px;color:#CECBF6;">집중 분야</div><div id="focusVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const CATEGORY_COLORS = {
+  에너지: { from: "#9B93EB", to: "#6D63CC", solid: "#7F77DD" },
+  소득:   { from: "#79D9B8", to: "#3FAF8B", solid: "#5DCAA5" },
+  보험:   { from: "#F4B194", to: "#DD7C5A", solid: "#F0997B" },
+  재해:   { from: "#F2A8C2", to: "#DE6B92", solid: "#ED93B1" },
+  탄소:   { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" },
+};
+const DEFAULT_COLOR = { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" };
+
+// index.html과 동일한 Firebase 설정 (읽기 전용으로만 사용)
+const firebaseConfig = {
+  apiKey: "AIzaSyDrKIGHnhSHRbYj0aPzCUdvk3eZMgoEOW4",
+  authDomain: "reportflowincomeenergy.firebaseapp.com",
+  databaseURL: "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "reportflowincomeenergy",
+  storageBucket: "reportflowincomeenergy.firebasestorage.app",
+  messagingSenderId: "120114688919",
+  appId: "1:120114688919:web:08644922957c82b8adcad2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+let idToken = null;
+
+const HISTORY_URL = firebaseConfig.databaseURL + "/directorQueue/v1/history.json";
+
+let history = [];
+let dailyChartInstance, catChartInstance, deptChartInstance;
+
+function lastNDates(n) {
+  const dates = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  return dates;
+}
+
+function formatDateLabel(dateStr) {
+  const [, m, d] = dateStr.split("-");
+  return `${parseInt(m)}/${parseInt(d)}`;
+}
+
+async function fetchHistory(isRetry = false) {
+  if (!idToken) {
+    // 토큰이 아직 없으면 강제로 한 번 더 받아온다 (새로고침 직후 타이밍 문제 대응)
+    const user = auth.currentUser;
+    if (user) {
+      idToken = await user.getIdToken();
+    } else {
+      return;
+    }
+  }
+  try {
+    const res = await fetch(HISTORY_URL + "?auth=" + idToken);
+    if (res.status === 401 && !isRetry) {
+      // 토큰 만료 -> 강제로 새 토큰 발급받아 한 번만 재시도
+      const user = auth.currentUser;
+      if (user) {
+        idToken = await user.getIdToken(true); // true = 강제 갱신
+        return fetchHistory(true);
+      }
+    }
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`불러오기 실패 (status ${res.status}) ${errText}`);
+    }
+    const data = await res.json();
+    history = data ? Object.values(data) : [];
+    document.getElementById('connectionNotice').style.display = 'none';
+    render();
+  } catch (e) {
+    console.error("fetchHistory error:", e);
+    document.getElementById('connectionNotice').style.display = 'block';
+    document.getElementById('connectionNotice').innerText = "데이터를 불러오지 못했습니다: " + e.message;
+  }
+}
+
+function render() {
+  const registered = history.filter(h => h.type === "등록");
+  const completed = history.filter(h => h.type === "완료" && h.processingTimeMs);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const monthPrefix = todayStr.slice(0, 7);
+
+  const monthlyTotal = registered.filter(h => h.date && h.date.startsWith(monthPrefix)).length;
+  const todayTotal = registered.filter(h => h.date === todayStr).length;
+
+  const avgProcessingMin = completed.length > 0
+    ? Math.round(completed.reduce((sum, h) => sum + h.processingTimeMs, 0) / completed.length / 1000 / 60)
+    : 0;
+
+  const categoryCounts = registered.reduce((acc, h) => {
+    const cat = h.category || "기타";
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {});
+  const totalCategoryCount = Object.values(categoryCounts).reduce((a, b) => a + b, 0) || 1;
+  const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+  const categoryAvgMin = Object.keys(categoryCounts).reduce((acc, cat) => {
+    const items = completed.filter(h => (h.category || "기타") === cat);
+    acc[cat] = items.length > 0
+      ? Math.round(items.reduce((sum, h) => sum + h.processingTimeMs, 0) / items.length / 1000 / 60)
+      : 0;
+    return acc;
+  }, {});
+
+  const last14 = lastNDates(14);
+  const dailyCounts = last14.map(date => registered.filter(h => h.date === date).length);
+
+  const last7 = lastNDates(7);
+  const prev7 = lastNDates(14).slice(0, 7);
+  const last7Total = registered.filter(h => last7.includes(h.date)).length;
+  const prev7Total = registered.filter(h => prev7.includes(h.date)).length;
+  const weekOverWeek = prev7Total > 0 ? Math.round(((last7Total - prev7Total) / prev7Total) * 100) : 0;
+
+  const bottleneckCategory = Object.entries(categoryAvgMin).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+  // ----- 텍스트 -----
+  document.getElementById('monthlyTotal').innerText = `${monthlyTotal}건`;
+  document.getElementById('todayTotal').innerText = `${todayTotal}건`;
+  document.getElementById('avgProcessing').innerText = `${avgProcessingMin}분`;
+  document.getElementById('topCategory').innerText = topCategory;
+  document.getElementById('totalCategoryCount').innerText = totalCategoryCount;
+
+  document.getElementById('insightText').innerHTML =
+    `등록 건수 전주 대비 <span style="font-weight:600;color:#AFA9EC;">${weekOverWeek >= 0 ? weekOverWeek + '% 증가' : Math.abs(weekOverWeek) + '% 감소'}</span>. ` +
+    `<span style="font-weight:600;color:#AFA9EC;">${topCategory} 분야</span>에 보고 집중. ` +
+    `<span style="font-weight:600;color:#AFA9EC;">${bottleneckCategory} 분야</span>는 평균 처리시간이 가장 길어 병목 구간으로 확인됨.`;
+  document.getElementById('weekOverWeekVal').innerText = `${weekOverWeek >= 0 ? '+' : ''}${weekOverWeek}%`;
+  document.getElementById('bottleneckVal').innerText = bottleneckCategory;
+  document.getElementById('focusVal').innerText = topCategory;
+
+  // ----- 범례 -----
+  const legendEl = document.getElementById('categoryLegend');
+  legendEl.innerHTML = '';
+  Object.entries(categoryCounts).forEach(([cat, count]) => {
+    const pct = Math.round((count / totalCategoryCount) * 100);
+    const color = (CATEGORY_COLORS[cat] || DEFAULT_COLOR).solid;
+    const span = document.createElement('span');
+    span.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    span.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>${cat} ${pct}%`;
+    legendEl.appendChild(span);
+  });
+
+  // ----- 일별 등록 추이 차트 -----
+  if (dailyChartInstance) dailyChartInstance.destroy();
+  dailyChartInstance = new Chart(document.getElementById('dailyChart'), {
+    type: 'bar',
+    data: {
+      labels: last14.map(formatDateLabel),
+      datasets: [{ data: dailyCounts, backgroundColor: '#7F77DD', borderRadius: 4, maxBarThickness: 22 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#888' } },
+        y: { grid: { color: 'rgba(137,135,129,0.15)' }, beginAtZero: true, ticks: { color: '#888' } }
+      }
+    }
+  });
+
+  // ----- 분야별 비중 도넛 차트 -----
+  if (catChartInstance) catChartInstance.destroy();
+  const catCtx = document.getElementById('catChart').getContext('2d');
+  const catLabels = Object.keys(categoryCounts);
+  const catData = catLabels.map(l => categoryCounts[l]);
+  const catColors = catLabels.map(l => {
+    const c = CATEGORY_COLORS[l] || DEFAULT_COLOR;
+    const g = catCtx.createLinearGradient(0, 0, 160, 160);
+    g.addColorStop(0, c.from);
+    g.addColorStop(1, c.to);
+    return g;
+  });
+  catChartInstance = new Chart(catCtx, {
+    type: 'doughnut',
+    data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: catColors, borderWidth: 0, hoverOffset: 4, spacing: 1 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(20,20,20,0.9)', padding: 10, cornerRadius: 8 } },
+      cutout: '78%', rotation: -90
+    }
+  });
+
+  // ----- 분야별 처리시간 차트 -----
+  if (deptChartInstance) deptChartInstance.destroy();
+  const sorted = Object.entries(categoryAvgMin).sort((a, b) => b[1] - a[1]);
+  deptChartInstance = new Chart(document.getElementById('deptChart'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([cat]) => cat),
+      datasets: [{ data: sorted.map(([, min]) => min), backgroundColor: '#7F77DD', borderRadius: 4, maxBarThickness: 20 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.parsed.x + '분' } } },
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 10, callback: (v) => v + '분', color: '#888' }, grid: { color: 'rgba(137,135,129,0.15)' } },
+        y: { grid: { display: false }, ticks: { color: '#888' } }
+      }
+    }
+  });
+
+  // 엑셀 내보내기에서 쓸 수 있도록 최신 계산값 저장
+  window.__statsSnapshot = {
+    registered, completed, categoryCounts, categoryAvgMin,
+    monthlyTotal, todayTotal, avgProcessingMin, topCategory, weekOverWeek, bottleneckCategory, todayStr
+  };
+}
+
+function handleExportExcel() {
+  const s = window.__statsSnapshot;
+  if (!s) {
+    alert("아직 불러온 데이터가 없습니다. 화면이 정상적으로 로딩된 후 다시 시도해 주세요.");
+    return;
+  }
+
+  const rawRows = history.map(h => ({
+    구분: h.type,
+    분야: h.category || "",
+    보고자: h.reporter || "",
+    제목: h.title || "",
+    날짜: h.date || "",
+    처리시간_분: h.processingTimeMs ? Math.round(h.processingTimeMs / 1000 / 60) : ""
+  }));
+
+  const dailyCountsMap = s.registered.reduce((acc, h) => {
+    acc[h.date] = (acc[h.date] || 0) + 1;
+    return acc;
+  }, {});
+  const dailyRows = Object.entries(dailyCountsMap).sort(([a], [b]) => a.localeCompare(b));
+  const categoryRows = Object.keys(s.categoryCounts).map(cat => [cat, s.categoryCounts[cat], s.categoryAvgMin[cat] || 0]);
+
+  const wb = XLSX.utils.book_new();
+  const summarySheet = XLSX.utils.aoa_to_sheet([
+    ["보고 등록 통계 요약", `생성일: ${s.todayStr}`],
+    [],
+    ["일별 등록 건수"],
+    ["날짜", "등록건수"],
+    ...dailyRows,
+    [],
+    ["분야별 통계"],
+    ["분야", "등록건수", "평균처리시간(분)"],
+    ...categoryRows,
+    [],
+    ["전체 요약"],
+    ["이번 달 누적 등록", s.monthlyTotal],
+    ["오늘 등록", s.todayTotal],
+    ["평균 처리시간(분)", s.avgProcessingMin],
+    ["최다 분야", s.topCategory],
+    ["전주 대비 증감률(%)", s.weekOverWeek],
+    ["병목 분야", s.bottleneckCategory]
+  ]);
+  XLSX.utils.book_append_sheet(wb, summarySheet, "요약");
+
+  const rawSheet = XLSX.utils.json_to_sheet(rawRows);
+  XLSX.utils.book_append_sheet(wb, rawSheet, "원본데이터");
+
+  XLSX.writeFile(wb, `보고통계_${s.todayStr}.xlsx`);
+}
+
+document.getElementById('exportBtn').addEventListener('click', handleExportExcel);
+
+// ----- 관리자 PIN 확인 (index.html과 동일한 토큰을 공유해서, 이미 관리자 모드인 사람은 다시 입력 안 해도 됨) -----
+function getAdminToken() {
+  const token = localStorage.getItem('adminToken');
+  const expiresAt = Number(localStorage.getItem('adminTokenExpiresAt') || 0);
+  return (token && Date.now() < expiresAt) ? token : null;
+}
+
+function unlockStats() {
+  document.getElementById('pinOverlay').classList.add('hidden');
+  document.getElementById('statsContent').classList.remove('hidden');
+  auth.onIdTokenChanged(async (user) => {
+    idToken = user ? await user.getIdToken() : null;
+    if (idToken) fetchHistory();
+  });
+  auth.signInAnonymously().catch(e => console.error("익명 로그인 실패:", e));
+  setInterval(fetchHistory, 60000);
+}
+
+async function submitStatsPin() {
+  const pin = document.getElementById('pinInput').value;
+  const errorEl = document.getElementById('pinError');
+  errorEl.style.display = 'none';
+
+  try {
+    const res = await fetch("/.netlify/functions/verify-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin })
+    });
+    const result = await res.json().catch(() => ({}));
+
+    if (!res.ok || !result.ok || !result.token) {
+      errorEl.style.display = 'block';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinInput').focus();
+      return;
+    }
+
+    localStorage.setItem('adminToken', result.token);
+    localStorage.setItem('adminTokenExpiresAt', String(result.expiresAt));
+    unlockStats();
+  } catch (e) {
+    console.error(e);
+    errorEl.textContent = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.';
+    errorEl.style.display = 'block';
+  }
+}
+
+document.getElementById('pinSubmitBtn').addEventListener('click', submitStatsPin);
+document.getElementById('pinInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitStatsPin();
+});
+
+// 이미 관리자 모드로 로그인되어 있으면 PIN 다시 안 묻고 바로 통과
+if (getAdminToken()) {
+  unlockStats();
+} else {
+  document.getElementById('pinInput').focus();
+}
+</script>
+</body>
+</html>

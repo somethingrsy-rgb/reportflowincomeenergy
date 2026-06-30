@@ -224,15 +224,30 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 }
 
 /* ===== 국장님 화면 ===== */
+.director-view #leftDashboardColumn {
+  min-width: 0;
+  width: 100%;
+}
+.director-view #activeReportingCard {
+  min-width: 0;
+  width: 100%;
+}
 .director-view #activeReporterBox {
   min-height: 300px;
   padding: 2rem 1rem;
+  width: 100%;
+  min-width: 0;
 }
 .director-view #activeName {
   font-size: clamp(2rem, 4vw, 4.5rem);
   letter-spacing: 0.1em !important;
   line-height: 1.35;
   margin-bottom: 0.6rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+  width: 100%;
 }
 .director-view #activeTitle {
   font-size: clamp(1rem, 2vw, 1.75rem);
@@ -241,6 +256,8 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
   max-width: 90%;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .director-view #activeDept {
   letter-spacing: normal !important;
@@ -449,7 +466,11 @@ body.light-mode #adminCard #awayLogArrow {
 </div>
 </div>
 
-<div class="flex flex-wrap items-center gap-2">
+<div class="flex items-center gap-2" style="flex-wrap:nowrap; overflow-x:auto; max-width:100%;">
+<a href="./stats.html" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
+통계 보기
+</a>
+
 <button id="adminModeBtn" onclick="toggleAdminMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
 관리자 도구 켜기
 </button>
@@ -459,10 +480,6 @@ body.light-mode #adminCard #awayLogArrow {
 </button>
 
 <button id="themeToggleBtn" onclick="toggleThemeMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">다크 모드</button>
-
-<button id="notifyBtn" onclick="requestNotificationPermission()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 text-xs font-bold transition border border-gray-700/80 director-hide">
-알림 활성화
-</button>
 
 <div class="text-right">
 <span id="connectionStatus" class="inline-flex items-center gap-x-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-emerald-400 bg-emerald-400/10 ring-1 ring-inset ring-emerald-400/20">
@@ -592,16 +609,6 @@ body.light-mode #adminCard #awayLogArrow {
 이 기기를 대리 수신자로 등록
 </button>
 <p id="deputyStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 대리 수신자가 등록되어 있습니다.</p>
-</div>
-
-<div class="h-px bg-gray-800 my-4"></div>
-
-<div class="space-y-2">
-<p class="text-xs font-bold text-gray-400">신규 등록 알림 (관리자 전용)</p>
-<button onclick="registerThisDeviceAsAdmin()" class="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
-이 기기를 관리자 알림 수신기기로 등록
-</button>
-<p id="adminStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다.</p>
 </div>
 
 <div class="h-px bg-gray-800 my-4"></div>
@@ -773,7 +780,6 @@ let localState = {
   updatedAt: "0",
   directorStatus: { available: true, reason: null, memo: "", since: null, expectedReturn: null, setBy: null },
   deputyFcmToken: "",
-  adminFcmToken: "",
   pendingAutoCall: false,
   unavailabilityLog: []
 };
@@ -786,7 +792,6 @@ function ensureDirectorStatusDefaults(state) {
     state.directorStatus = { available: true, reason: null, memo: "", since: null, expectedReturn: null, setBy: null };
   }
   if (typeof state.deputyFcmToken !== "string") state.deputyFcmToken = "";
-  if (typeof state.adminFcmToken !== "string") state.adminFcmToken = "";
   if (typeof state.pendingAutoCall !== "boolean") state.pendingAutoCall = false;
   if (!Array.isArray(state.unavailabilityLog)) state.unavailabilityLog = [];
   return state;
@@ -904,14 +909,11 @@ async function mutateState(mutateFn, options = {}) {
 
   for (let attempt = 0; attempt < MAX_RETRY; attempt++) {
     try {
-      // 1) 최신 상태 + ETag(현재 버전표) 함께 읽기
-      const getResponse = await fetch(authedDbUrl(), {
-        headers: { "X-Firebase-ETag": "true" }
-      });
+      // 1) 최신 상태 읽기 (읽기는 계속 클라이언트가 직접 Firebase에서 가져옴 — 읽기 전용이라 안전함)
+      const getResponse = await fetch(authedDbUrl());
       if (!getResponse.ok) {
         throw new Error("네트워크 연결 이상");
       }
-      const etag = getResponse.headers.get("ETag");
       let currentState = { bookings: [], preCallTimingCount: 2, updatedAt: "0" };
       const data = await getResponse.json();
       if (data) currentState = data;
@@ -946,27 +948,24 @@ async function mutateState(mutateFn, options = {}) {
         return true;
       }
 
-      // 3) 일반(비관리자) 작업: 읽었던 버전(ETag)이 그대로일 때만 쓰기 시도 (Compare-And-Swap)
-      //    데이터가 아예 없던 최초 상태였다면 Firebase 규약상 'null_etag'를 사용해야 함
-      const putResponse = await fetch(authedDbUrl(), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "if-match": etag || "null_etag"
-        },
-        body: JSON.stringify(nextState)
+      // 3) 일반(비관리자) 작업: 서버 함수(queue-write)를 통해서만 저장한다.
+      //    Firebase Database Rules에서 직접 쓰기(.write)를 막아도 정상 동작하도록,
+      //    그리고 history(통계) 기록이 누락되지 않도록 서버를 거치게 한다.
+      const writeResponse = await fetch("/.netlify/functions/queue-write", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nextState, expectedUpdatedAt: currentState.updatedAt || "0" })
       });
 
-      if (putResponse.status === 412) {
+      if (writeResponse.status === 409) {
         // 그 사이 다른 사람이 먼저 썼음 -> 최신값 기준으로 다시 계산해 재시도
-        // 시도 횟수가 늘수록 대기시간도 늘려서(지수 백오프) 동시 충돌 확률을 빠르게 낮춤
         console.warn(`동시 수정 충돌 감지, 재시도 ${attempt + 1}/${MAX_RETRY}`);
         const backoff = Math.min(120 * Math.pow(1.7, attempt), 2000);
         await new Promise(r => setTimeout(r, backoff + Math.random() * backoff * 0.6));
         continue;
       }
 
-      if (!putResponse.ok) {
+      if (!writeResponse.ok) {
         throw new Error("서버 상태 저장 실패");
       }
 
@@ -1086,7 +1085,10 @@ function toggleDirectorMode(forceState = null) {
   if (isDirectorMode) {
     body.classList.add('director-view');
     right.classList.add('hidden');
-    left.className = "lg:col-span-12 flex flex-col gap-6";
+    left.className = "flex flex-col gap-6";
+    left.style.gridColumn = "1 / -1";
+    left.style.minWidth = "0";
+    left.style.width = "100%";
     btn.innerText = "일반 화면";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold transition border border-emerald-600/80";
     subtitle.innerText = "국장님 확인용 대시보드";
@@ -1096,6 +1098,9 @@ function toggleDirectorMode(forceState = null) {
     body.classList.remove('director-view');
     right.classList.remove('hidden');
     left.className = "lg:col-span-7 flex flex-col gap-6";
+    left.style.gridColumn = "";
+    left.style.minWidth = "";
+    left.style.width = "";
     btn.innerText = "국장님 화면";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 text-xs font-bold transition border border-violet-500/80";
     subtitle.innerText = "웹브라우저 모니터링 및 관리자 원격 호출 지원";
@@ -1262,7 +1267,6 @@ function renderUI() {
   updateMyBookingUI();
   renderDirectorStatusUI();
   renderDeputyStatus();
-  renderAdminStatus();
   renderAwayLog();
 
   const adminCardEl = document.getElementById('adminCard');
@@ -1425,7 +1429,6 @@ async function requestNotificationPermission() {
     const token = await window.initPushNotifications();
     if (token) {
       alert("백그라운드 알림 설정이 활성화되었습니다.");
-      document.getElementById('notifyBtn').innerText = "알림 켜짐";
       playChime();
       return;
     }
@@ -1467,6 +1470,7 @@ async function handleFormSubmit(event) {
   const newBooking = {
     id: newId,
     department: dept,
+    category: dept, // 통계 페이지에서 분야별 집계에 사용 (업무 분야 칩 값과 동일)
     reporterName: reporter,
     title: title,
     phoneNumber: "",
@@ -1485,19 +1489,6 @@ async function handleFormSubmit(event) {
     document.getElementById('titleInput').value = "";
     alert("성공적으로 예약 대기 신청이 접수되었습니다.");
     playChime();
-    notifyAdminOfNewRegistration({ department: dept, reporterName: reporter, title: title });
-  }
-}
-
-async function notifyAdminOfNewRegistration(payload) {
-  try {
-    await fetch("/.netlify/functions/notify-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload || {})
-    });
-  } catch (error) {
-    console.error("Admin notify failed", error);
   }
 }
 
@@ -1848,14 +1839,6 @@ function renderDeputyStatus() {
     : "아직 등록된 대리 수신자가 없습니다.";
 }
 
-function renderAdminStatus() {
-  const el = document.getElementById('adminStatusText');
-  if (!el) return;
-  el.innerText = localState.adminFcmToken
-    ? "✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다."
-    : "아직 등록된 관리자 알림 기기가 없습니다.";
-}
-
 function renderAwayLog() {
   const container = document.getElementById('awayLogContainer');
   if (!container) return;
@@ -2040,24 +2023,6 @@ async function registerThisDeviceAsDeputy() {
 
   if (success) {
     alert("이 기기가 대리 수신자로 등록되었습니다.\n국장님 부재중 전환 시 이 기기로 알림이 전달됩니다.");
-  }
-}
-
-async function registerThisDeviceAsAdmin() {
-  const token = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
-  if (!token) {
-    alert("먼저 '알림 활성화' 버튼을 눌러 이 기기의 알림을 켜주세요.");
-    return;
-  }
-
-  const success = await mutateState((freshState) => {
-    ensureDirectorStatusDefaults(freshState);
-    freshState.adminFcmToken = token;
-    return freshState;
-  }, { requireAdmin: true });
-
-  if (success) {
-    alert("이 기기가 관리자 알림 수신기기로 등록되었습니다.\n앞으로 신규 등록이 있을 때마다 이 기기로 알림이 전달됩니다.");
   }
 }
 
