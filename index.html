@@ -468,21 +468,21 @@ body.light-mode #adminCard #awayLogArrow {
 
 <div class="flex items-center gap-2" style="flex-wrap:nowrap; overflow-x:auto; max-width:100%;">
 <a href="./stats.html" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
-통계 보기
+통계
 </a>
 
 <button id="adminModeBtn" onclick="toggleAdminMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
-관리자 도구 켜기
+관리자
 </button>
 
 <button id="directorModeBtn" onclick="toggleDirectorMode()" class="always-white-text inline-flex items-center justify-center rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 text-xs font-bold transition border border-violet-500/80">
-국장님 화면
+국장님
 </button>
 
-<button id="themeToggleBtn" onclick="toggleThemeMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">다크 모드</button>
+<button id="themeToggleBtn" onclick="toggleThemeMode()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">다크</button>
 
 <button id="notifyBtn" onclick="requestNotificationPermission()" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
-알림 활성화
+알림
 </button>
 
 <div class="text-right">
@@ -822,7 +822,7 @@ let isDirectorMode = false;
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('themeMode') === 'light') {
     document.body.classList.add('light-mode');
-    document.getElementById('themeToggleBtn').innerText = '다크 모드';
+    document.getElementById('themeToggleBtn').innerText = '다크';
   }
 
   // 토큰이 유효할 때만 모드 복원 (만료 시 PIN 팝업 없이 조용히 해제)
@@ -1003,7 +1003,7 @@ function toggleThemeMode() {
   document.body.classList.toggle('light-mode');
   const isLight = document.body.classList.contains('light-mode');
   localStorage.setItem('themeMode', isLight ? 'light' : 'dark');
-  document.getElementById('themeToggleBtn').innerText = isLight ? '다크 모드' : '화이트 모드';
+  document.getElementById('themeToggleBtn').innerText = isLight ? '다크' : '라이트';
   renderUI();
 }
 
@@ -1105,7 +1105,7 @@ function toggleDirectorMode(forceState = null) {
     left.style.gridColumn = "1 / -1";
     left.style.minWidth = "0";
     left.style.width = "100%";
-    btn.innerText = "일반 화면";
+    btn.innerText = "일반";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 text-xs font-bold transition border border-emerald-600/80";
     subtitle.innerText = "국장님 확인용 대시보드";
     queueHelperText.innerText = "현재 대기 중인 보고팀 현황입니다";
@@ -1117,7 +1117,7 @@ function toggleDirectorMode(forceState = null) {
     left.style.gridColumn = "";
     left.style.minWidth = "";
     left.style.width = "";
-    btn.innerText = "국장님 화면";
+    btn.innerText = "국장님";
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 text-xs font-bold transition border border-violet-500/80";
     subtitle.innerText = "웹브라우저 모니터링 및 관리자 원격 호출 지원";
     queueHelperText.innerText = "대기 순서대로 배치되며 관리자가 상시 조율 가능합니다";
@@ -1145,12 +1145,12 @@ function toggleAdminMode(forceState = null) {
     adminCard.classList.remove('hidden');
     quickAdminBox.classList.remove('hidden');
     adminBtn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 text-xs font-bold transition shadow-md shadow-amber-600/10";
-    adminBtn.innerHTML = "관리자 모드 켜짐";
+    adminBtn.innerHTML = "관리자 ✓";
   } else {
     adminCard.classList.add('hidden');
     quickAdminBox.classList.add('hidden');
     adminBtn.className = "inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80";
-    adminBtn.innerHTML = "관리자 도구 켜기";
+    adminBtn.innerHTML = "관리자";
   }
 
   renderUI();
