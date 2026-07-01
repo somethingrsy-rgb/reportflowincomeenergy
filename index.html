@@ -605,6 +605,16 @@ body.light-mode #adminCard #awayLogArrow {
 <div class="h-px bg-gray-800 my-4"></div>
 
 <div class="space-y-2">
+<p class="text-xs font-bold text-gray-400">신규 등록 알림 (관리자 전용)</p>
+<button onclick="registerThisDeviceAsAdmin()" class="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
+이 기기를 관리자 알림 수신기기로 등록
+</button>
+<p id="adminStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다.</p>
+</div>
+
+<div class="h-px bg-gray-800 my-4"></div>
+
+<div class="space-y-2">
 <p class="text-xs font-bold text-gray-400">국장님 부재중 / 대리 수신자 설정</p>
 <button onclick="openDirectorStatusModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
 국장님 부재중 상태 설정
@@ -783,6 +793,7 @@ let localState = {
   preCallTimingCount: 2,
   updatedAt: "0",
   directorStatus: { available: true, reason: null, memo: "", since: null, expectedReturn: null, setBy: null },
+  adminFcmToken: "",
   deputyFcmToken: "",
   pendingAutoCall: false,
   unavailabilityLog: []
@@ -795,6 +806,7 @@ function ensureDirectorStatusDefaults(state) {
   if (!state.directorStatus) {
     state.directorStatus = { available: true, reason: null, memo: "", since: null, expectedReturn: null, setBy: null };
   }
+  if (typeof state.adminFcmToken !== "string") state.adminFcmToken = "";
   if (typeof state.deputyFcmToken !== "string") state.deputyFcmToken = "";
   if (typeof state.pendingAutoCall !== "boolean") state.pendingAutoCall = false;
   if (!Array.isArray(state.unavailabilityLog)) state.unavailabilityLog = [];
@@ -1271,6 +1283,7 @@ function renderUI() {
   updateMyBookingUI();
   renderDirectorStatusUI();
   renderDeputyStatus();
+  renderAdminStatus();
   renderAwayLog();
 
   const adminCardEl = document.getElementById('adminCard');
@@ -1494,6 +1507,19 @@ async function handleFormSubmit(event) {
     document.getElementById('titleInput').value = "";
     alert("성공적으로 예약 대기 신청이 접수되었습니다.");
     playChime();
+    notifyAdminOfNewRegistration({ department: dept, reporterName: reporter, title: title });
+  }
+}
+
+async function notifyAdminOfNewRegistration(payload) {
+  try {
+    await fetch("/.netlify/functions/notify-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {})
+    });
+  } catch (error) {
+    console.error("Admin notify failed", error);
   }
 }
 
@@ -1836,6 +1862,14 @@ function renderDirectorStatusUI() {
   toggleBtn.classList.toggle('hidden', !(isAdminMode || isDirectorMode));
 }
 
+function renderAdminStatus() {
+  const el = document.getElementById('adminStatusText');
+  if (!el) return;
+  el.innerText = localState.adminFcmToken
+    ? "✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다."
+    : "아직 등록된 관리자 알림 기기가 없습니다.";
+}
+
 function renderDeputyStatus() {
   const el = document.getElementById('deputyStatusText');
   if (!el) return;
@@ -2010,6 +2044,24 @@ async function notifyDeputyOfAwayStatus() {
     });
   } catch (error) {
     console.error("Deputy notify failed", error);
+  }
+}
+
+async function registerThisDeviceAsAdmin() {
+  const token = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
+  if (!token) {
+    alert("먼저 '알림 활성화' 버튼을 눌러 이 기기의 알림을 켜주세요.");
+    return;
+  }
+
+  const success = await mutateState((freshState) => {
+    ensureDirectorStatusDefaults(freshState);
+    freshState.adminFcmToken = token;
+    return freshState;
+  }, { requireAdmin: true });
+
+  if (success) {
+    alert("이 기기가 관리자 알림 수신기기로 등록되었습니다.\n앞으로 신규 등록이 있을 때마다 이 기기로 알림이 전달됩니다.");
   }
 }
 
