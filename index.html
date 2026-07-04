@@ -364,6 +364,55 @@ body.light-mode #myBookingCard .bg-emerald-500\/20 {
 .director-view .director-hide {
   display: none !important;
 }
+/* 국장님 화면 드래그 앤 드롭 순서변경 */
+.director-drag-handle:active {
+  cursor: grabbing;
+}
+.queue-item-dragging {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+  opacity: 0.92;
+}
+.queue-drag-placeholder {
+  border: 2px dashed rgba(129,140,248,0.55);
+  background: rgba(99,102,241,0.08);
+  border-radius: 0.75rem;
+  margin-bottom: 0.1rem;
+}
+
+/* ===== 긴급 처리 "승인대기" 상태 전용 색상 ===== */
+/* 박스: 연한 분홍색 */
+.queue-item-pending {
+  border-color: #F472B6;
+  background: rgba(244,114,182,0.10);
+}
+body.light-mode .queue-item-pending {
+  border-color: #F9A8D4;
+  background: #FDF2F8;
+}
+/* "⏳ 승인대기" 배지도 박스와 톤을 맞춘다 */
+.pending-badge {
+  background: rgba(244,114,182,0.20);
+  color: #FBCFE8;
+  box-shadow: inset 0 0 0 1px rgba(244,114,182,0.4);
+}
+body.light-mode .pending-badge {
+  background: #FCE7F3;
+  color: #9D174D;
+  box-shadow: inset 0 0 0 1px #F9A8D4;
+}
+/* 관리자 승인/거절 패널 안의 글씨: 잘 안 보이던 흐린 노란색 대신 진한 색으로 */
+.urgent-request-title {
+  color: #FDE68A;
+}
+body.light-mode .urgent-request-title {
+  color: #78350F;
+}
+.urgent-request-reason {
+  color: #FEF3C7;
+}
+body.light-mode .urgent-request-reason {
+  color: #78350F;
+}
 
 /* ===== 화이트 모드: 관리자 통제 패널 전용 가독성 개선 =====
    적용 범위: #adminCard 내부만
@@ -749,9 +798,9 @@ body.light-mode #adminCard #awayLogArrow {
       <span class="text-rose-400 text-xl">🚨</span>
       <h3 class="text-base font-black text-white">긴급 처리 신청</h3>
     </div>
-    <p class="text-xs text-rose-300 font-semibold mb-1">⚠️ 전체 대기열에 긴급 공지가 표시됩니다</p>
+    <p class="text-xs text-rose-300 font-semibold mb-1">⚠️ 관리자 승인 후 대기열 맨 앞으로 이동합니다</p>
     <p class="text-xs text-gray-400 mb-4 leading-relaxed">
-      긴급 신청을 하면 모든 대기자에게 현재 보고가 긴급 처리 중임이 공개 표시됩니다.
+      신청 즉시 순서가 바뀌지 않으며, 관리자가 사유를 확인하고 <span class="text-amber-300 font-semibold">승인해야만</span> 대기열 맨 앞으로 이동합니다.
       <br>사유는 <span class="text-amber-300 font-semibold">관리자에게만</span> 전달되며, 남용을 자제해 주세요.
     </p>
     <div class="mb-4">
@@ -888,13 +937,16 @@ async function fetchState() {
   }
 }
 
-// 화면 표시/순번 계산용: 긴급 항목을 맨 앞으로, 나머지는 등록 순서 그대로 정렬
+// 화면 표시/순번 계산용: orderRank 값을 기준으로 정렬한다.
+// - 신규 등록 시 orderRank = 등록 시각(id)이므로 기본적으로는 등록 순서와 동일하다.
+// - 관리자가 긴급 요청을 승인하면 orderRank가 현재 대기열 맨 앞보다 앞서도록 갱신되어 맨 앞으로 이동한다.
+// - 국장님이 순서를 직접 조정(위/아래)하면 인접 항목과 orderRank가 교환되어 위치가 바뀐다.
+function getRank(b) {
+  return (typeof b.orderRank === "number") ? b.orderRank : b.id;
+}
 function getOrderedWaitingList(bookings) {
   const waiting = bookings.filter(b => b.status === "WAITING");
-  return [
-    ...waiting.filter(b => b.isUrgent).sort((a, b) => (a.escalatedAt || 0) - (b.escalatedAt || 0)),
-    ...waiting.filter(b => !b.isUrgent)
-  ];
+  return waiting.slice().sort((a, b) => getRank(a) - getRank(b));
 }
 
 // 대기열에서 다음으로 호출할 사람을 찾는다.
@@ -1157,6 +1209,11 @@ function toggleAdminMode(forceState = null) {
 }
 
 function renderUI() {
+  // 드래그로 순서를 옮기는 도중에는 화면을 다시 그리지 않는다.
+  // (1초마다 자동으로 다시 그려지는 로직이 있는데, 드래그 중 다시 그려지면
+  //  손으로 옮기고 있던 카드가 화면에서 사라져 버려서 드래그가 끊긴 것처럼 보인다.)
+  if (dragState) return;
+
   document.getElementById('connectionStatus').innerHTML = `
     <span class="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-semibold text-emerald-400 bg-emerald-400/10 ring-1 ring-inset ring-emerald-400/20">
       <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-active"></span>
@@ -1207,6 +1264,8 @@ function renderUI() {
       const isMe = item.id === myId;
       const cardBorderClass = item.isUrgent
         ? 'queue-item-urgent border-rose-500 bg-rose-950/20 glow-red'
+        : (isAdminMode || isDirectorMode) && item.urgentRequested
+        ? 'queue-item-pending'
         : isMe
         ? 'border-emerald-500 bg-emerald-950/20 glow-green'
         : 'border-gray-800 bg-slate-950/50 hover:border-gray-700 queue-item-normal';
@@ -1217,12 +1276,26 @@ function renderUI() {
             : `<button onclick="adminEscalateToUrgent(${item.id})" class="p-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-md transition ml-1" title="긴급으로 끌어올리기">긴급호출</button>`)
         : '';
 
+      // 국장님 화면 전용: 꾹 눌러서 드래그하면 순서를 바꿀 수 있는 손잡이
+      const directorDragHandle = isDirectorMode
+        ? `<div class="director-drag-handle flex items-center justify-center text-indigo-300 hover:text-indigo-100 active:text-indigo-50" style="touch-action:none; cursor:grab; width:2.5rem; height:2.5rem; user-select:none;" onpointerdown="directorDragStart(event, ${item.id})" title="꾹 눌러서 위아래로 드래그하면 순서를 바꿀 수 있습니다">
+             <span style="font-size:1.5rem; line-height:1; letter-spacing:-2px;">⠿⠿</span>
+           </div>`
+        : '';
+
       const adminActions = (isAdminMode && !isDirectorMode)
         ? `${adminEscalateBtn}<button onclick="adminDismissSpecific(${item.id})" class="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md transition ml-1" title="이 대기 예약 강제 삭제">삭제</button>`
+        : isDirectorMode
+        ? directorDragHandle
         : `<span class="text-[10px] text-gray-600 font-medium font-mono">${getRelativeTime(item.id)}</span>`;
 
       const urgentBadge = item.isUrgent
         ? '<span class=\"inline-flex items-center rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300 ring-1 ring-inset ring-rose-500/30\">🚨 긴급</span>'
+        : '';
+
+      // 관리자/국장 전용: 긴급 "요청 대기중" 배지 (일반 사용자에게는 승인 전까지 공개하지 않음)
+      const urgentRequestPendingBadge = (isAdminMode || isDirectorMode) && !item.isUrgent && item.urgentRequested
+        ? '<span class=\"pending-badge inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold\">⏳ 승인대기</span>'
         : '';
 
       // 관리자 전용: 긴급 사유 표시
@@ -1230,8 +1303,20 @@ function renderUI() {
         ? `<p class=\"text-[10px] text-amber-300 mt-1 font-semibold\">📋 긴급사유(관리자): ${escapeHtml(item.urgentReason)}${item.urgentRequestedBySelf ? ' <span class=\"text-rose-400\">[본인 신청]</span>' : ''}</p>`
         : '';
 
+      // 관리자 전용: 긴급 "요청" 검토 카드 (승인/거절)
+      const adminUrgentRequestPanel = (isAdminMode && !isDirectorMode && !item.isUrgent && item.urgentRequested)
+        ? `<div class=\"mt-1.5 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg\">
+             <p class=\"urgent-request-title text-[10px] font-bold\">⏳ 긴급 처리 요청 대기중${item.urgentRequestedBySelf ? ' <span class=\"text-rose-400\">[본인 신청]</span>' : ''}</p>
+             <p class=\"urgent-request-reason text-[10px] mt-0.5\">${escapeHtml(item.urgentReason || '')}</p>
+             <div class=\"flex gap-1.5 mt-1.5\">
+               <button onclick=\"adminApproveUrgentRequest(${item.id})\" class=\"flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-1 rounded-md transition\">승인 (맨 앞으로)</button>
+               <button onclick=\"adminRejectUrgentRequest(${item.id})\" class=\"flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 text-[10px] font-bold py-1 rounded-md transition\">거절</button>
+             </div>
+           </div>`
+        : '';
+
       const itemHtml = `
-        <div class="flex items-center justify-between p-4 border rounded-xl transition duration-200 ${cardBorderClass}">
+        <div class="flex items-center justify-between p-4 border rounded-xl transition duration-200 ${cardBorderClass}" data-booking-id="${item.id}">
           <div class="flex items-center space-x-3 overflow-hidden">
             <div class="h-8 w-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-xs ${item.isUrgent ? 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-500/30' : isMe ? 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30' : 'bg-slate-800 text-gray-400 queue-number-normal'}">
               ${index + 1}
@@ -1241,10 +1326,12 @@ function renderUI() {
                 <h4 class="text-sm font-bold text-white">${escapeHtml(item.department)}</h4>
                 <span class="text-xs text-gray-400 font-medium font-mono">${escapeHtml(item.reporterName)}</span>
                 ${urgentBadge}
+                ${urgentRequestPendingBadge}
                 ${isMe && !isDirectorMode ? '<span class="inline-flex items-center rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-inset ring-emerald-500/20">내 예약</span>' : ''}
               </div>
               <p class="text-xs text-gray-300 mt-1 truncate font-semibold">${escapeHtml(item.title)}</p>
               ${adminUrgentReason}
+              ${adminUrgentRequestPanel}
             </div>
           </div>
           <div class="flex items-center ml-2 flex-shrink-0">
@@ -1338,8 +1425,12 @@ function updateMyBookingUI() {
     const pos = waitingList.findIndex(b => b.id === myId) + 1;
 
     if (myBooking.isUrgent) {
-      myStatusText.innerHTML = `🚨 긴급 신청됨 (순번: ${pos}번째) — 관리자 검토 중`;
+      myStatusText.innerHTML = `🚨 긴급 승인됨 (순번: ${pos}번째) — 최우선 처리 중`;
       myStatusText.className = "text-sm font-black text-rose-400 mt-0.5";
+      if (urgentRow) urgentRow.classList.add('hidden');
+    } else if (myBooking.urgentRequested) {
+      myStatusText.innerHTML = `⏳ 긴급 요청 승인 대기 중 (순번: ${pos}번째)`;
+      myStatusText.className = "text-sm font-black text-amber-400 mt-0.5";
       if (urgentRow) urgentRow.classList.add('hidden');
     } else {
       myStatusText.innerText = `대기 중 (현재 내 순번: ${pos}번째)`;
@@ -1455,6 +1546,24 @@ async function requestNotificationPermission() {
   alert("일반 브라우저 알림은 켜졌지만, FCM 토큰 발급은 실패했습니다.\n\n실제 오류:\n" + (window.__lastFcmError || "(오류 메시지 없음 - getToken이 빈 값을 반환함)"));
 }
 
+// 버튼을 따로 누르지 않아도, 등록/관리자 기기 등록처럼 사용자가 어차피 누르는
+// 동작(클릭)에 자연스럽게 알림 권한 요청을 함께 끼워 넣기 위한 헬퍼.
+// 브라우저 정책상 "누르지 않아도 알림이 오게" 하는 것 자체는 불가능하다 —
+// 브라우저가 알림 허용 팝업을 반드시 사용자의 클릭 동작 안에서만 띄우도록 강제하기 때문이다.
+// 대신 이미 하고 있는 클릭(등록하기 버튼 등)에 슬쩍 얹어서, 별도로 "알림 활성화"를
+// 한 번 더 누르지 않아도 되게 만든다.
+async function ensureNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false; // 이미 거절된 상태면 다시 물어볼 수 없음
+  try {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  } catch (error) {
+    return false;
+  }
+}
+
 function setQuickDept(deptName) {
   const deptInput = document.getElementById('deptInput');
   deptInput.value = deptName;
@@ -1482,6 +1591,14 @@ async function handleFormSubmit(event) {
     return;
   }
 
+  // "등록하기" 클릭 자체가 사용자 동작이므로, 이 타이밍에 알림 권한도 함께 요청한다.
+  // (별도로 "알림 활성화" 버튼을 먼저 누를 필요가 없어진다. 이미 허용/거절된 상태면
+  //  브라우저가 팝업 없이 곧바로 결과를 반환하므로 등록 흐름이 느려지지 않는다.)
+  const granted = await ensureNotificationPermission();
+  if (granted && window.initPushNotifications) {
+    await window.initPushNotifications();
+  }
+
   const newId = Date.now();
   const fcmToken = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
 
@@ -1493,7 +1610,8 @@ async function handleFormSubmit(event) {
     title: title,
     phoneNumber: "",
     fcmToken: fcmToken || "",
-    status: "WAITING"
+    status: "WAITING",
+    orderRank: newId // 대기 순서 기준값(등록 순서). 국장님이 순서를 조정하면 이 값이 바뀐다.
   };
 
   const success = await mutateState((freshState) => {
@@ -1700,7 +1818,11 @@ function openUrgentRequestModal() {
     return;
   }
   if (myBooking.isUrgent) {
-    alert('이미 긴급 신청된 예약입니다.\n관리자가 확인 후 처리 중입니다.');
+    alert('이미 긴급 처리로 승인된 예약입니다.');
+    return;
+  }
+  if (myBooking.urgentRequested) {
+    alert('이미 긴급 요청을 접수했습니다.\n관리자의 승인을 기다리고 있습니다.');
     return;
   }
   document.getElementById('urgentReasonInput').value = '';
@@ -1726,10 +1848,11 @@ async function submitUrgentRequest() {
 
   const success = await mutateState((freshState) => {
     const target = freshState.bookings.find(b => b.id === myId && b.status === 'WAITING');
-    if (target) {
-      target.isUrgent = true;
-      target.escalatedAt = Date.now();
-      target.urgentReason = reason;       // 관리자 전용
+    if (target && !target.isUrgent) {
+      // 신청 즉시 순서를 바꾸지 않는다. 관리자가 승인해야 비로소 맨 앞으로 이동한다.
+      target.urgentRequested = true;
+      target.urgentRequestedAt = Date.now();
+      target.urgentReason = reason;        // 관리자 전용
       target.urgentRequestedBySelf = true; // 본인 신청 여부
     }
     return freshState;
@@ -1737,20 +1860,30 @@ async function submitUrgentRequest() {
 
   if (success) {
     closeUrgentRequestModal();
-    alert('긴급 처리가 신청되었습니다.\n관리자에게 사유가 전달되었으며, 전체 대기열에 긴급 표시가 공개됩니다.');
+    alert('긴급 처리 요청이 접수되었습니다.\n관리자 승인 후 대기열 맨 앞으로 이동합니다.');
     playChime();
     updateMyBookingUI();
   }
+}
+
+// 현재 대기열에서 가장 앞선(가장 작은) orderRank 값을 구한다. 새로 긴급 승인/지정된
+// 항목은 이 값보다 더 작은 값을 받아 대기열 맨 앞으로 이동한다.
+function getMinWaitingRank(bookings) {
+  const waiting = bookings.filter(b => b.status === "WAITING");
+  if (waiting.length === 0) return Date.now();
+  return waiting.reduce((min, b) => Math.min(min, getRank(b)), Infinity);
 }
 
 async function adminEscalateToUrgent(id) {
   if (!confirm("이 보고를 긴급으로 지정하여 대기열 맨 앞으로 올리시겠습니까?\n(중복 긴급 등록 시 먼저 지정된 순서대로 처리됩니다)")) return;
 
   const success = await mutateState((freshState) => {
+    const minRank = getMinWaitingRank(freshState.bookings);
     const target = freshState.bookings.find(b => b.id === id && b.status === "WAITING");
     if (target) {
       target.isUrgent = true;
       target.escalatedAt = Date.now();
+      target.orderRank = minRank - 1;
     }
     return freshState;
   }, { requireAdmin: true });
@@ -1762,18 +1895,170 @@ async function adminEscalateToUrgent(id) {
 }
 
 async function adminCancelUrgent(id) {
-  if (!confirm("긴급 지정을 해제하고 일반 대기 순서로 되돌리시겠습니까?")) return;
+  if (!confirm("긴급 지정을 해제하고 일반 대기 순서(등록 순서)로 되돌리시겠습니까?")) return;
 
   const success = await mutateState((freshState) => {
     const target = freshState.bookings.find(b => b.id === id);
     if (target) {
       target.isUrgent = false;
       target.escalatedAt = null;
+      target.orderRank = target.id; // 원래 등록 순서로 복귀
     }
     return freshState;
   }, { requireAdmin: true });
 
   if (success) alert("긴급 지정이 해제되었습니다.");
+}
+
+// ===== 긴급 요청 승인/거절 (일반 사용자가 신청한 건에 대한 관리자 조치) =====
+
+async function adminApproveUrgentRequest(id) {
+  if (!confirm("이 긴급 요청을 승인하시겠습니까?\n승인하면 대기열 맨 앞으로 이동합니다.")) return;
+
+  const success = await mutateState((freshState) => {
+    const minRank = getMinWaitingRank(freshState.bookings);
+    const target = freshState.bookings.find(b => b.id === id && b.status === "WAITING");
+    if (target) {
+      target.isUrgent = true;
+      target.escalatedAt = Date.now();
+      target.orderRank = minRank - 1;
+      target.urgentRequested = false;
+    }
+    return freshState;
+  }, { requireAdmin: true });
+
+  if (success) {
+    alert("긴급 요청을 승인했습니다. 대기열 맨 앞으로 이동합니다.");
+    playChime();
+  }
+}
+
+async function adminRejectUrgentRequest(id) {
+  if (!confirm("이 긴급 요청을 거절하시겠습니까?\n일반 대기 순서를 그대로 유지합니다.")) return;
+
+  const success = await mutateState((freshState) => {
+    const target = freshState.bookings.find(b => b.id === id);
+    if (target) {
+      target.urgentRequested = false;
+    }
+    return freshState;
+  }, { requireAdmin: true });
+
+  if (success) alert("긴급 요청을 거절했습니다.");
+}
+
+// ===== 국장님 화면: 꾹 눌러서 드래그로 대기 순서 조정 =====
+let dragState = null;
+
+function directorDragStart(event, id) {
+  if (!isDirectorMode || dragState) return;
+  event.preventDefault();
+
+  const handle = event.currentTarget;
+  const itemEl = handle.closest('[data-booking-id]');
+  const queueList = document.getElementById('queueList');
+  if (!itemEl || !queueList) return;
+
+  const itemRect = itemEl.getBoundingClientRect();
+  const listRect = queueList.getBoundingClientRect();
+
+  // 카드를 목록 컨테이너 기준 절대좌표로 띄운다. (뷰포트 기준 fixed는 화면 구조에 따라
+  // 부모 요소 영향을 받을 수 있어, 목록 컨테이너를 기준으로 하는 방식이 더 안정적이다.)
+  queueList.style.position = 'relative';
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'queue-drag-placeholder';
+  placeholder.style.height = itemRect.height + 'px';
+  itemEl.parentNode.insertBefore(placeholder, itemEl.nextSibling);
+
+  const startTop = itemRect.top - listRect.top + queueList.scrollTop;
+
+  itemEl.style.position = 'absolute';
+  itemEl.style.left = (itemRect.left - listRect.left) + 'px';
+  itemEl.style.top = startTop + 'px';
+  itemEl.style.width = itemRect.width + 'px';
+  itemEl.style.zIndex = '30';
+  itemEl.style.pointerEvents = 'none';
+  itemEl.classList.add('queue-item-dragging');
+
+  dragState = {
+    id,
+    pointerId: event.pointerId,
+    itemEl,
+    placeholder,
+    queueList,
+    startTop,
+    startClientY: event.clientY
+  };
+
+  // 손잡이가 아니라 document 전체에 이벤트를 걸어서, 손가락/마우스가
+  // 손잡이 영역을 벗어나며 움직여도 드래그를 놓치지 않도록 한다.
+  document.addEventListener('pointermove', directorDragMove);
+  document.addEventListener('pointerup', directorDragEnd);
+  document.addEventListener('pointercancel', directorDragEnd);
+}
+
+function directorDragMove(event) {
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
+  event.preventDefault();
+
+  const { itemEl, placeholder, startTop, startClientY, queueList } = dragState;
+  const deltaY = event.clientY - startClientY;
+  itemEl.style.top = (startTop + deltaY) + 'px';
+
+  const siblings = Array.from(queueList.children).filter(el => el !== itemEl && el !== placeholder);
+
+  let target = null;
+  for (const sib of siblings) {
+    const sibRect = sib.getBoundingClientRect();
+    const sibMid = sibRect.top + sibRect.height / 2;
+    if (event.clientY < sibMid) { target = sib; break; }
+  }
+
+  if (target) {
+    queueList.insertBefore(placeholder, target);
+  } else {
+    queueList.appendChild(placeholder);
+  }
+}
+
+async function directorDragEnd(event) {
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
+
+  document.removeEventListener('pointermove', directorDragMove);
+  document.removeEventListener('pointerup', directorDragEnd);
+  document.removeEventListener('pointercancel', directorDragEnd);
+
+  const { itemEl, placeholder, queueList } = dragState;
+
+  queueList.insertBefore(itemEl, placeholder);
+  placeholder.remove();
+
+  itemEl.style.position = '';
+  itemEl.style.left = '';
+  itemEl.style.top = '';
+  itemEl.style.width = '';
+  itemEl.style.zIndex = '';
+  itemEl.style.pointerEvents = '';
+  itemEl.classList.remove('queue-item-dragging');
+  queueList.style.position = '';
+
+  const orderedIds = Array.from(queueList.children)
+    .filter(el => el.dataset && el.dataset.bookingId)
+    .map(el => parseInt(el.dataset.bookingId, 10));
+
+  dragState = null;
+
+  const success = await mutateState((freshState) => {
+    const base = Date.now();
+    orderedIds.forEach((bid, idx) => {
+      const b = freshState.bookings.find(x => x.id === bid && x.status === "WAITING");
+      if (b) b.orderRank = base + idx;
+    });
+    return freshState;
+  }, { requireAdmin: true });
+
+  if (success) playChime();
 }
 
 async function adminResetAll() {
@@ -2048,9 +2333,13 @@ async function notifyDeputyOfAwayStatus() {
 }
 
 async function registerThisDeviceAsAdmin() {
+  const granted = await ensureNotificationPermission();
+  if (granted && window.initPushNotifications) {
+    await window.initPushNotifications();
+  }
   const token = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
   if (!token) {
-    alert("먼저 '알림 활성화' 버튼을 눌러 이 기기의 알림을 켜주세요.");
+    alert("이 브라우저에서 알림 권한이 허용되지 않아 등록할 수 없습니다.\n브라우저 주소창의 자물쇠 아이콘에서 알림을 허용해 주세요.");
     return;
   }
 
@@ -2066,9 +2355,13 @@ async function registerThisDeviceAsAdmin() {
 }
 
 async function registerThisDeviceAsDeputy() {
+  const granted = await ensureNotificationPermission();
+  if (granted && window.initPushNotifications) {
+    await window.initPushNotifications();
+  }
   const token = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
   if (!token) {
-    alert("먼저 '알림 활성화' 버튼을 눌러 이 기기의 알림을 켜주세요.");
+    alert("이 브라우저에서 알림 권한이 허용되지 않아 등록할 수 없습니다.\n브라우저 주소창의 자물쇠 아이콘에서 알림을 허용해 주세요.");
     return;
   }
 
