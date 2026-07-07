@@ -640,6 +640,10 @@ body.light-mode #adminCard #awayLogArrow {
 보고완료 누르기 → 다음 사람 자동 호출
 </button>
 
+<button onclick="openWalkInModal()" class="always-white-text w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
+🚶 예약 없이 입장한 팀 즉시 등록 (바로 보고중 표시)
+</button>
+
 <div class="h-px bg-gray-800 my-4"></div>
 
 <div class="grid grid-cols-2 gap-2">
@@ -814,6 +818,53 @@ body.light-mode #adminCard #awayLogArrow {
       </button>
       <button onclick="submitUrgentRequest()" class="always-white-text flex-1 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-rose-900/30">
         신청하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 워크인(예약 없이 입장) 즉시 등록 모달 (관리자 전용) -->
+<div id="walkInModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeWalkInModal()"></div>
+  <div class="relative bg-slate-900 border border-amber-500/40 rounded-2xl p-6 w-full max-w-md shadow-2xl shadow-amber-900/30">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-amber-400 text-xl">🚶</span>
+      <h3 class="text-base font-black text-white">현장 입장 팀 즉시 등록</h3>
+    </div>
+    <p class="text-xs text-amber-300 font-semibold mb-1">등록 즉시 "현재 보고 진행팀"으로 상황판에 표시됩니다</p>
+    <p class="text-xs text-gray-400 mb-4 leading-relaxed">
+      대기 등록 없이 국장실에 먼저 들어간 팀을 관리자가 대신 등록하는 기능입니다.
+      대기열을 거치지 않고 <span class="text-amber-300 font-semibold">바로 보고중 상태</span>로 전환되며, 보고 시간·통계에도 정상 집계됩니다.
+    </p>
+
+    <div class="mb-3">
+      <label class="block text-xs font-bold text-gray-300 mb-1.5">업무 분야 <span class="text-amber-400">*</span></label>
+      <div class="flex flex-wrap gap-1.5 mb-2">
+        <button type="button" onclick="setWalkInDept('소득')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">소득</button>
+        <button type="button" onclick="setWalkInDept('보험')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">보험</button>
+        <button type="button" onclick="setWalkInDept('에너지')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">에너지</button>
+        <button type="button" onclick="setWalkInDept('재해')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">재해</button>
+        <button type="button" onclick="setWalkInDept('탄소')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">탄소</button>
+      </div>
+      <input id="walkInDeptInput" type="text" placeholder="분야를 선택하거나 직접 작성하세요" class="w-full bg-slate-950 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all">
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-xs font-bold text-gray-300 mb-1.5">보고자 <span class="text-amber-400">*</span></label>
+      <input id="walkInReporterInput" type="text" placeholder="예: 홍길동 사무관" class="w-full bg-slate-950 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all">
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-xs font-bold text-gray-300 mb-1.5">보고 안건 <span class="text-amber-400">*</span></label>
+      <input id="walkInTitleInput" type="text" placeholder="예: 영농형태양광 시행령 검토 결과" class="w-full bg-slate-950 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all">
+    </div>
+
+    <div class="flex gap-2">
+      <button onclick="closeWalkInModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold py-2.5 px-4 rounded-xl text-sm transition">
+        취소
+      </button>
+      <button onclick="submitWalkInEntry()" class="always-white-text flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-amber-900/30">
+        즉시 입장 등록
       </button>
     </div>
   </div>
@@ -1230,7 +1281,9 @@ function renderUI() {
 
   if (activeBooking) {
     activeCard.className = "bg-gradient-to-br from-indigo-950/40 via-indigo-900/30 to-slate-900 border border-green-500/50 rounded-2xl p-6 glow-green transition-all duration-300";
-    document.getElementById('activeDept').innerText = activeBooking.department;
+    document.getElementById('activeDept').innerText = activeBooking.isWalkIn
+      ? `${activeBooking.department} · 현장입장`
+      : activeBooking.department;
     document.getElementById('activeDept').className = "mb-3 px-4 py-1 bg-green-500/20 border border-green-500/50 rounded-full text-green-300 text-sm font-bold tracking-tight pulse-active inline-block";
     document.getElementById('activeName').innerText = activeBooking.reporterName;
     document.getElementById('activeTitle').innerText = activeBooking.title;
@@ -1803,6 +1856,95 @@ async function adminDismissSpecific(id) {
   }, { requireAdmin: true });
 
   if (success) alert("삭제 처리되었습니다.");
+}
+
+
+// ===== 워크인(예약 없이 입장) 즉시 등록 (관리자 전용) =====
+// 대기 등록 없이 국장실에 먼저 들어간 팀을 관리자가 대신 등록한다.
+// 대기열(WAITING)을 거치지 않고 곧바로 REPORTING 상태로 만들어
+// 상황판 "현재 국장실 보고 진행팀" 카드에 즉시 표시되게 한다.
+
+function openWalkInModal() {
+  if (!verifyAccessPin(openWalkInModal)) return;
+
+  document.getElementById('walkInDeptInput').value = '';
+  document.getElementById('walkInReporterInput').value = '';
+  document.getElementById('walkInTitleInput').value = '';
+  // 칩 선택 상태 초기화
+  document.querySelectorAll('.walkin-dept-chip').forEach(chip => {
+    chip.className = "walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition";
+  });
+  document.getElementById('walkInModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('walkInReporterInput').focus(), 100);
+}
+
+function closeWalkInModal() {
+  document.getElementById('walkInModal').classList.add('hidden');
+}
+
+function setWalkInDept(deptName) {
+  document.getElementById('walkInDeptInput').value = deptName;
+  document.querySelectorAll('.walkin-dept-chip').forEach(chip => {
+    if (chip.innerText.trim() === deptName) {
+      chip.className = "always-white-text walkin-dept-chip bg-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-500/50 transition";
+    } else {
+      chip.className = "walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition";
+    }
+  });
+}
+
+async function submitWalkInEntry() {
+  const dept = document.getElementById('walkInDeptInput').value.trim();
+  const reporter = document.getElementById('walkInReporterInput').value.trim();
+  const title = document.getElementById('walkInTitleInput').value.trim();
+
+  if (!dept || !reporter || !title) {
+    alert("업무 분야, 보고자, 보고 안건을 모두 입력해 주세요.");
+    return;
+  }
+
+  // 이미 보고 중인 팀이 있으면 먼저 확인을 받는다.
+  const existingReporting = localState.bookings.find(b => b.status === "REPORTING");
+  if (existingReporting) {
+    const ok = confirm(
+      `현재 [${existingReporting.department}] ${existingReporting.reporterName}님이 보고 중으로 표시되어 있습니다.\n\n` +
+      `해당 팀을 '보고완료' 처리하고, 새로 입장한 팀을 보고중으로 표시할까요?`
+    );
+    if (!ok) return;
+  }
+
+  const newId = Date.now();
+  const newBooking = {
+    id: newId,
+    department: dept,
+    category: dept, // 통계 페이지 분야별 집계용
+    reporterName: reporter,
+    title: title,
+    phoneNumber: "",
+    fcmToken: "",
+    status: "REPORTING",   // 대기열을 거치지 않고 즉시 보고중 상태
+    calledAt: Date.now(),  // 보고 시작 시각 (경과시간 타이머 기준)
+    orderRank: newId,
+    isWalkIn: true         // 예약 없이 현장 입장한 건임을 표시
+  };
+
+  const success = await mutateState((freshState) => {
+    // 동기화 사이에 다른 팀이 보고중으로 잡혀 있어도, 현장 입장이 실제 상황이므로
+    // 기존 보고중 팀은 완료 처리하고 새 팀을 보고중으로 올린다.
+    const current = freshState.bookings.find(b => b.status === "REPORTING");
+    if (current) {
+      current.status = "COMPLETED";
+      current.completedAt = Date.now();
+    }
+    freshState.bookings.push(newBooking);
+    return freshState;
+  }, { requireAdmin: true });
+
+  if (success) {
+    closeWalkInModal();
+    alert(`[${dept}] ${reporter}님이 보고중으로 등록되었습니다.\n상황판에 즉시 표시됩니다.`);
+    playChime();
+  }
 }
 
 
