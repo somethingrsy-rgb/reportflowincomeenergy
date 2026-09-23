@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(title, {
     body,
     icon: "./icons/icon-192.png",
-    badge: "./icons/icon-192.png",
+    badge: "./icons/notification-badge.png",
     tag: "director-queue-alert",
     renotify: true,
     data: { url: "./index.html" }
@@ -34,12 +34,13 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v3-mobile";
+const CACHE_NAME = "director-queue-pwa-v4-android-badge";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
+  "./icons/notification-badge.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png"
 ];
