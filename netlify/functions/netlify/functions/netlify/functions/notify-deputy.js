@@ -21,16 +21,23 @@ exports.handler = async (event) => {
     const reason = ds.reason || "사유 미지정";
     const memoSuffix = ds.memo ? ` (${ds.memo})` : "";
 
-    const APP_URL = process.env.ALLOWED_ORIGIN || "";
+    const APP_URL = process.env.ALLOWED_ORIGIN || "https://mafraincomeenergy.netlify.app";
     const title = "국장실 보고대기 - 부재중 알림";
     const body = `국장님이 현재 부재중입니다. 사유: ${reason}${memoSuffix}. 대리 확인 부탁드립니다.`;
 
     await admin.messaging().send({
       token: deputyToken,
+      notification: { title, body },
       android: { priority: "high" },
       webpush: {
-        headers: { Urgency: "high" },
-        ...(APP_URL ? { fcmOptions: { link: APP_URL } } : {}),
+        notification: {
+          title,
+          body,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/badge-96.png",
+          requireInteraction: true,
+        },
+        fcmOptions: { link: APP_URL },
       },
       data: { title, body, type: "deputy-alert", reason },
     });

@@ -21,16 +21,23 @@ exports.handler = async (event) => {
       return json(200, { ok: true, skipped: "already-sent", reportingId: current.id });
     }
 
-    const APP_URL = process.env.ALLOWED_ORIGIN || "";
+    const APP_URL = process.env.ALLOWED_ORIGIN || "https://mafraincomeenergy.netlify.app";
     const title = "국장실 보고대기";
     const body = `${current.department || "해당"}팀 차례입니다. 국장실 앞으로 와주세요.`;
 
     await admin.messaging().send({
       token: current.fcmToken,
+      notification: { title, body },
       android: { priority: "high" },
       webpush: {
-        headers: { Urgency: "high" },
-        ...(APP_URL ? { fcmOptions: { link: APP_URL } } : {}),
+        notification: {
+          title,
+          body,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/badge-96.png",
+          requireInteraction: true,
+        },
+        fcmOptions: { link: APP_URL },
       },
       data: {
         title,

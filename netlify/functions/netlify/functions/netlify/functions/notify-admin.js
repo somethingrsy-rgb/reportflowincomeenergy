@@ -28,7 +28,7 @@ exports.handler = async (event) => {
     const reporterName = payload.reporterName || "";
     const title = payload.title || "";
 
-    const APP_URL = process.env.ALLOWED_ORIGIN || "";
+    const APP_URL = process.env.ALLOWED_ORIGIN || "https://mafraincomeenergy.netlify.app";
     const notifTitle = "국장실 보고대기 - 신규 등록";
     const detail = [department, reporterName].filter(Boolean).join(" / ");
     const notifBody = detail
@@ -37,10 +37,17 @@ exports.handler = async (event) => {
 
     await admin.messaging().send({
       token: adminToken,
+      notification: { title: notifTitle, body: notifBody },
       android: { priority: "high" },
       webpush: {
-        headers: { Urgency: "high" },
-        ...(APP_URL ? { fcmOptions: { link: APP_URL } } : {}),
+        notification: {
+          title: notifTitle,
+          body: notifBody,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/badge-96.png",
+          requireInteraction: true,
+        },
+        fcmOptions: { link: APP_URL },
       },
       data: { title: notifTitle, body: notifBody, type: "new-registration" },
     });
