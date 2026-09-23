@@ -44,7 +44,7 @@ exports.handler = async (event) => {
           title: notifTitle,
           body: notifBody,
           icon: "/icons/icon-192.png",
-          badge: "/icons/icon-192.png",
+          badge: "/icons/badge-96.png",
           requireInteraction: true,
         },
         fcmOptions: { link: APP_URL },
