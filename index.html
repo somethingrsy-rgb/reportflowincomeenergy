@@ -982,7 +982,7 @@ function ensureDirectorStatusDefaults(state) {
 
 let lastKnownStatus = null;
 let lastKnownBookingId = null;
-let preCallAlertTriggered = false;
+let preCallAlertedPos = null; // 사전 알림을 마지막으로 보낸 순번 (null = 아직 없음)
 let isExpandedCompleted = false;
 let isAdminMode = false;
 let isDirectorMode = false;
@@ -1707,7 +1707,7 @@ function checkMyStatusTriggers() {
 
   if (lastKnownBookingId !== myIdStr) {
     lastKnownStatus = null;
-    preCallAlertTriggered = false;
+    preCallAlertedPos = null;
     lastKnownBookingId = myIdStr;
   }
   if (myBooking.status === "REPORTING" && lastKnownStatus !== "REPORTING") {
@@ -1718,14 +1718,16 @@ function checkMyStatusTriggers() {
   if (myBooking.status === "WAITING") {
     const waitingList = getOrderedWaitingList(localState.bookings);
     const pos = waitingList.findIndex(b => b.id === myId) + 1;
-    const preCallTiming = localState.preCallTimingCount || 2;
 
-    if (pos > 0 && pos <= preCallTiming && !preCallAlertTriggered) {
-      sendBrowserNotification("보고 대기 순번 임박 예보!", `앞에 대기중인 팀이 ${pos}팀 남았습니다. 국장실 근처로 이동해주십시오.`);
-      playChime();
-      preCallAlertTriggered = true;
-    } else if (pos > preCallTiming) {
-      preCallAlertTriggered = false;
+    // 대기 1번(다음 차례)일 때만 알림을 보낸다. 2번 이하에는 사전 알림을 보내지 않는다.
+    if (pos === 1) {
+      if (preCallAlertedPos !== 1) {
+        sendBrowserNotification("다음번 차례입니다", "국장실 근처로 이동해 주십시오.");
+        playChime();
+        preCallAlertedPos = 1;
+      }
+    } else if (pos > 1) {
+      preCallAlertedPos = null;
     }
   }
 
