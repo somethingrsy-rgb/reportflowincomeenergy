@@ -1695,17 +1695,6 @@ function updateMyBookingUI() {
   }
 }
 
-// 사전 알림 문구. pos는 대기열(WAITING) 안에서의 내 순번(1부터)이다.
-// 국장실에서 이미 보고 중인 팀은 대기열에 포함되지 않으므로,
-// "앞에 대기중인 팀"은 내 앞의 대기 팀 수(pos - 1)로 계산한다.
-function buildPreCallMessage(pos) {
-  const teamsAhead = Math.max(pos - 1, 0);
-  if (teamsAhead === 0) {
-    return "다음 차례입니다. 국장실 근처로 이동해주십시오.";
-  }
-  return `앞에 대기중인 팀이 ${teamsAhead}팀 남았습니다. 국장실 근처로 이동해주십시오.`;
-}
-
 function checkMyStatusTriggers() {
   if (isDirectorMode) return;
 
@@ -1729,13 +1718,13 @@ function checkMyStatusTriggers() {
   if (myBooking.status === "WAITING") {
     const waitingList = getOrderedWaitingList(localState.bookings);
     const pos = waitingList.findIndex(b => b.id === myId) + 1;
-    const preCallTiming = localState.preCallTimingCount || 2;
 
-    if (pos > 0 && pos <= preCallTiming && !preCallAlertTriggered) {
-      sendBrowserNotification("보고 대기 순번 임박 예보!", buildPreCallMessage(pos));
+    // 내 앞에 대기 팀이 없을 때(다음 차례)만 알린다. "N팀 남았습니다" 알림은 보내지 않는다.
+    if (pos === 1 && !preCallAlertTriggered) {
+      sendBrowserNotification("보고 대기 순번 임박 예보!", "다음 차례입니다. 국장실 근처로 이동해 주십시오.");
       playChime();
       preCallAlertTriggered = true;
-    } else if (pos > preCallTiming) {
+    } else if (pos > 1) {
       preCallAlertTriggered = false;
     }
   }

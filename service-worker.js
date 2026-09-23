@@ -23,8 +23,9 @@ messaging.onBackgroundMessage((payload) => {
     body,
     icon: "./icons/icon-192.png",
     badge: "./icons/badge-96.png",
-    tag: "director-queue-alert",
+    tag: "director-queue-" + (payload?.data?.type || payload?.data?.bookingId || "alert"),
     renotify: true,
+    requireInteraction: true,
     data: { url: "./index.html" }
   });
 });
@@ -34,7 +35,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v4-badge";
+const CACHE_NAME = "director-queue-pwa-v5-bell";
 const CORE_ASSETS = [
   "./",
   "./index.html",
