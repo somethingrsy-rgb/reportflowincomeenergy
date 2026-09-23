@@ -1,5 +1,4 @@
-const { admin, json } = require("./_config");
-const { getBureauId, getPaths, getBureauAppUrl } = require("./_bureau");
+const { admin, json, STATE_PATH } = require("./_config");
 
 // 일반 사용자가 새 대기열 예약을 등록했을 때 호출되는 함수.
 // state.adminFcmToken (관리자 화면에서 등록한 관리자 기기)에게
@@ -8,14 +7,8 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, { ok: true });
   if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
 
-  let requestBody = {};
-  try { requestBody = JSON.parse(event.body || "{}"); } catch { requestBody = {}; }
-  let bureauId;
-  let paths;
-  try { bureauId = getBureauId(requestBody); paths = getPaths(bureauId); } catch { return json(400, { ok: false, error: "국 식별값이 올바르지 않습니다." }); }
-
   try {
-    const ref = admin.database().ref(paths.statePath);
+    const ref = admin.database().ref(STATE_PATH);
     const snap = await ref.get();
     const state = snap.val() || {};
     const adminToken = state.adminFcmToken;
@@ -24,13 +17,18 @@ exports.handler = async (event) => {
       return json(200, { ok: true, skipped: "no-admin-token" });
     }
 
-    const payload = requestBody;
+    let payload = {};
+    try {
+      payload = JSON.parse(event.body || "{}");
+    } catch (_) {
+      payload = {};
+    }
 
     const department = payload.department || "";
     const reporterName = payload.reporterName || "";
     const title = payload.title || "";
 
-    const APP_URL = getBureauAppUrl(bureauId);
+    const APP_URL = process.env.ALLOWED_ORIGIN || "https://mafraincomeenergy.netlify.app";
     const notifTitle = "국장실 보고대기 - 신규 등록";
     const detail = [department, reporterName].filter(Boolean).join(" / ");
     const notifBody = detail
@@ -39,27 +37,19 @@ exports.handler = async (event) => {
 
     await admin.messaging().send({
       token: adminToken,
+      notification: { title: notifTitle, body: notifBody },
       android: { priority: "high" },
       webpush: {
-        headers: { Urgency: "high", TTL: "300" },
         notification: {
           title: notifTitle,
           body: notifBody,
           icon: "/icons/icon-192.png",
-          badge: "/icons/notification-badge.png",
-          tag: `new-registration-${Date.now()}`,
+          badge: "/icons/icon-192.png",
           requireInteraction: true,
-          vibrate: [250, 120, 250],
         },
         fcmOptions: { link: APP_URL },
       },
-      data: {
-        title: notifTitle,
-        body: notifBody,
-        type: "new-registration",
-        tag: `new-registration-${Date.now()}`,
-        url: APP_URL,
-      },
+      data: { title: notifTitle, body: notifBody, type: "new-registration" },
     });
 
     return json(200, { ok: true, sent: true });

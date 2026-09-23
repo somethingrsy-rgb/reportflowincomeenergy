@@ -1,11 +1,11 @@
 const crypto = require("crypto");
 const { admin, json } = require("./_config");
-const { getBureauId, getPaths, getAdminCredentials } = require("./_bureau");
 
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7일
 
 const MAX_ATTEMPTS = 5;           // 이 횟수만큼 틀리면 잠금
 const LOCKOUT_MS = 1000 * 60 * 15; // 잠금 지속 시간 (15분)
+const ATTEMPTS_PATH = "/security/adminPinAttempts";
 
 // 길이가 다른 문자열을 비교할 때도 처리 시간이 일정하도록 맞춰서
 // PIN을 한 글자씩 추측하는 타이밍 공격을 막는다.
@@ -33,6 +33,16 @@ exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return json(200, { ok: true });
   if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
 
+  const ADMIN_PIN = process.env.ADMIN_PIN;
+  const ADMIN_PIN_SECRET = process.env.ADMIN_PIN_SECRET || ADMIN_PIN;
+
+  if (!ADMIN_PIN) {
+    return json(500, {
+      ok: false,
+      error: "서버에 ADMIN_PIN 환경변수가 설정되어 있지 않습니다. Netlify 환경변수를 확인하세요.",
+    });
+  }
+
   let body;
   try {
     body = JSON.parse(event.body || "{}");
@@ -40,17 +50,9 @@ exports.handler = async (event) => {
     return json(400, { ok: false, error: "잘못된 요청 형식입니다." });
   }
 
-  let bureauId;
-  let paths;
-  try { bureauId = getBureauId(body); paths = getPaths(bureauId); } catch { return json(400, { ok: false, error: "국 식별값이 올바르지 않습니다." }); }
-  const { pin: ADMIN_PIN, secret: ADMIN_PIN_SECRET } = getAdminCredentials(bureauId);
-  if (!ADMIN_PIN) {
-    return json(500, { ok: false, error: "이 국의 관리자 PIN이 아직 설정되어 있지 않습니다." });
-  }
-
   const pin = String(body.pin ?? "");
   const ipKey = ipToKey(getClientIp(event));
-  const attemptRef = admin.database().ref(`${paths.attemptsPath}/${ipKey}`);
+  const attemptRef = admin.database().ref(`${ATTEMPTS_PATH}/${ipKey}`);
 
   // 1) 현재 잠금 상태인지 먼저 확인
   const snapshot = await attemptRef.once("value");

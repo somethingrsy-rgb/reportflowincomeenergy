@@ -1,10 +1,11 @@
 const crypto = require("crypto");
-const { admin, json } = require("./_config");
-const { getBureauId, getPaths, getAdminCredentials } = require("./_bureau");
+const { admin, json, STATE_PATH } = require("./_config");
+
+const HISTORY_PATH = "/directorQueue/v1/history";
 
 // 관리자 동작(호출/완료/리셋 등)으로 새로 COMPLETED 된 예약을 찾아 history에 기록한다.
 // 통계 페이지는 history만 보고 계산하므로, 여기서 기록을 빠뜨리면 통계에서 누락된다.
-async function recordNewlyCompleted(prevBookings, nextBookings, historyPath) {
+async function recordNewlyCompleted(prevBookings, nextBookings) {
   const prevCompletedIds = new Set(
     (prevBookings || []).filter((b) => b.status === "COMPLETED").map((b) => b.id)
   );
@@ -15,7 +16,7 @@ async function recordNewlyCompleted(prevBookings, nextBookings, historyPath) {
   if (newlyCompleted.length === 0) return;
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const historyRef = admin.database().ref(historyPath);
+  const historyRef = admin.database().ref(HISTORY_PATH);
 
   await Promise.all(
     newlyCompleted.map((b) => {
@@ -37,9 +38,10 @@ async function recordNewlyCompleted(prevBookings, nextBookings, historyPath) {
 }
 
 // verify-pin.js가 발급한 토큰이 진짜이고(서명이 맞고) 아직 만료되지 않았는지 확인한다.
-function verifyToken(token, bureauId) {
-  const { secret } = getAdminCredentials(bureauId);
-  if (!secret || !token || typeof token !== "string") return false;
+function verifyToken(token) {
+  const ADMIN_PIN = process.env.ADMIN_PIN;
+  const ADMIN_PIN_SECRET = process.env.ADMIN_PIN_SECRET || ADMIN_PIN;
+  if (!ADMIN_PIN_SECRET || !token || typeof token !== "string") return false;
 
   const parts = token.split(".");
   if (parts.length !== 2) return false;
@@ -48,7 +50,7 @@ function verifyToken(token, bureauId) {
   if (!expiresAt || Date.now() > expiresAt) return false;
 
   const expectedSignature = crypto
-    .createHmac("sha256", secret)
+    .createHmac("sha256", ADMIN_PIN_SECRET)
     .update(expiresAtStr)
     .digest("hex");
 
@@ -70,11 +72,8 @@ exports.handler = async (event) => {
   }
 
   const { token, nextState } = body;
-  let bureauId;
-  let paths;
-  try { bureauId = getBureauId(body); paths = getPaths(bureauId); } catch { return json(400, { ok: false, error: "국 식별값이 올바르지 않습니다." }); }
 
-  if (!verifyToken(token, bureauId)) {
+  if (!verifyToken(token)) {
     return json(401, { ok: false, error: "관리자 인증이 유효하지 않거나 만료되었습니다." });
   }
 
@@ -83,7 +82,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const stateRef = admin.database().ref(paths.statePath);
+    const stateRef = admin.database().ref(STATE_PATH);
 
     // history 기록을 위해 덮어쓰기 전 상태를 먼저 읽어둔다.
     const prevSnapshot = await stateRef.once("value");
@@ -93,7 +92,7 @@ exports.handler = async (event) => {
 
     // 새로 COMPLETED 된 항목이 있으면 history에 기록 (실패해도 본 저장은 이미 성공한 것으로 처리)
     try {
-      await recordNewlyCompleted(prevState.bookings, nextState.bookings, paths.historyPath);
+      await recordNewlyCompleted(prevState.bookings, nextState.bookings);
     } catch (historyError) {
       console.error("history 기록 실패 (상태 저장은 정상 완료됨):", historyError);
     }

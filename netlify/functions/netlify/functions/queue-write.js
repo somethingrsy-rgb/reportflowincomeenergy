@@ -1,8 +1,9 @@
-const { admin, json } = require("./_config");
-const { getBureauId, getPaths } = require("./_bureau");
+const { admin, json, STATE_PATH } = require("./_config");
+
+const HISTORY_PATH = "/directorQueue/v1/history";
 
 // 새로 등록되거나 새로 완료된 항목을 찾아 history에 기록한다.
-async function recordHistory(prevBookings, nextBookings, historyPath) {
+async function recordHistory(prevBookings, nextBookings) {
   const prevIds = new Set((prevBookings || []).map((b) => b.id));
   const prevCompletedIds = new Set(
     (prevBookings || []).filter((b) => b.status === "COMPLETED").map((b) => b.id)
@@ -16,7 +17,7 @@ async function recordHistory(prevBookings, nextBookings, historyPath) {
   if (newlyRegistered.length === 0 && newlyCompleted.length === 0) return;
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const historyRef = admin.database().ref(historyPath);
+  const historyRef = admin.database().ref(HISTORY_PATH);
   const writes = [];
 
   for (const b of newlyRegistered) {
@@ -69,9 +70,6 @@ exports.handler = async (event) => {
   }
 
   const { nextState, expectedUpdatedAt } = body;
-  let bureauId;
-  let paths;
-  try { bureauId = getBureauId(body); paths = getPaths(bureauId); } catch { return json(400, { ok: false, error: "국 식별값이 올바르지 않습니다." }); }
 
   if (!nextState || typeof nextState !== "object" || Array.isArray(nextState)) {
     return json(400, { ok: false, error: "저장할 데이터 형식이 올바르지 않습니다." });
@@ -81,7 +79,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const stateRef = admin.database().ref(paths.statePath);
+    const stateRef = admin.database().ref(STATE_PATH);
     const prevSnapshot = await stateRef.once("value");
     const prevState = prevSnapshot.val() || {};
 
@@ -95,7 +93,7 @@ exports.handler = async (event) => {
     await stateRef.set(nextState);
 
     try {
-      await recordHistory(prevState.bookings, nextState.bookings, paths.historyPath);
+      await recordHistory(prevState.bookings, nextState.bookings);
     } catch (historyError) {
       console.error("history 기록 실패 (상태 저장은 정상 완료됨):", historyError);
     }
