@@ -1718,13 +1718,13 @@ function checkMyStatusTriggers() {
   if (myBooking.status === "WAITING") {
     const waitingList = getOrderedWaitingList(localState.bookings);
     const pos = waitingList.findIndex(b => b.id === myId) + 1;
+    const preCallTiming = localState.preCallTimingCount || 2;
 
-    // 내 앞에 대기 팀이 없을 때(다음 차례)만 알린다. "N팀 남았습니다" 알림은 보내지 않는다.
-    if (pos === 1 && !preCallAlertTriggered) {
-      sendBrowserNotification("보고 대기 순번 임박 예보!", "다음 차례입니다. 국장실 근처로 이동해 주십시오.");
+    if (pos > 0 && pos <= preCallTiming && !preCallAlertTriggered) {
+      sendBrowserNotification("보고 대기 순번 임박 예보!", `앞에 대기중인 팀이 ${pos}팀 남았습니다. 국장실 근처로 이동해주십시오.`);
       playChime();
       preCallAlertTriggered = true;
-    } else if (pos > 1) {
+    } else if (pos > preCallTiming) {
       preCallAlertTriggered = false;
     }
   }
@@ -1769,7 +1769,7 @@ async function sendBrowserNotification(title, text) {
     await navigator.serviceWorker.register('./service-worker.js');
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification(title, {
-      body: text, icon: './icons/icon-192.png', badge: './icons/badge-96.png',
+      body: text, icon: './icons/icon-192.png', badge: './icons/notification-badge.png',
       tag: 'director-queue-' + title, data: { url: './index.html' }
     });
     return true;

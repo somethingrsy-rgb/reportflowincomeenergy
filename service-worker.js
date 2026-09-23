@@ -22,10 +22,9 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(title, {
     body,
     icon: "./icons/icon-192.png",
-    badge: "./icons/badge-96.png",
-    tag: "director-queue-" + (payload?.data?.type || payload?.data?.bookingId || "alert"),
+    badge: "./icons/notification-badge.png",
+    tag: "director-queue-alert",
     renotify: true,
-    requireInteraction: true,
     data: { url: "./index.html" }
   });
 });
@@ -35,14 +34,14 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v5-bell";
+const CACHE_NAME = "director-queue-pwa-v4-android-badge";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
+  "./icons/notification-badge.png",
   "./icons/icon-512.png",
-  "./icons/badge-96.png",
   "./icons/apple-touch-icon.png"
 ];
 
