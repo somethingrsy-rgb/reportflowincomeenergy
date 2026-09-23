@@ -1,3 +1,14 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# 멀티국 확장 경로: /b/{국ID} 및 하위 경로를 공통 프론트엔드로 연결
+[[redirects]]
+  from = "/b/*/stats"
+  to = "/stats.html"
+  status = 200
+
+[[redirects]]
+  from = "/b/*"
+  to = "/index.html"
+  status = 200

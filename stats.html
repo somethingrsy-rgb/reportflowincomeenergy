@@ -77,6 +77,8 @@
     <div class="stat-card"><div style="font-size:13px;color:#888;">최다 분야</div><div id="topCategory" style="font-size:24px;font-weight:600;">-</div></div>
   </div>
 
+  <p style="font-size:13px;color:#aaa;margin-bottom:1rem;">처리시간 통계는 1시간 미만인 완료 보고만 반영합니다. 1시간 이상 기록은 제외하며, 등록 건수는 유지합니다.</p>
+
   <div style="font-size:14px;color:#888;margin-bottom:8px;">일별 등록 추이 (최근 14일)</div>
   <div style="position:relative;width:100%;height:200px;margin-bottom:2rem;">
     <canvas id="dailyChart"></canvas>
@@ -117,6 +119,7 @@
 </div>
 </div>
 
+<script src="/bureau-config.js"></script>
 <script>
 const CATEGORY_COLORS = {
   에너지: { from: "#9B93EB", to: "#6D63CC", solid: "#7F77DD" },
@@ -125,6 +128,7 @@ const CATEGORY_COLORS = {
   재해:   { from: "#F2A8C2", to: "#DE6B92", solid: "#ED93B1" },
   탄소:   { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" },
 };
+const BUREAU = window.getCurrentBureauConfig();
 const DEFAULT_COLOR = { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" };
 
 // index.html과 동일한 Firebase 설정 (읽기 전용으로만 사용)
@@ -142,8 +146,13 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 let idToken = null;
 
-const HISTORY_URL = firebaseConfig.databaseURL + "/directorQueue/v1/history.json";
+const HISTORY_PATH = BUREAU.legacy ? "/directorQueue/v1/history" : `/directorQueues/${BUREAU.id}/v1/history`;
+const HISTORY_URL = firebaseConfig.databaseURL + HISTORY_PATH + ".json";
 
+
+if (!BUREAU.legacy && BUREAU.name) {
+  document.title = `${BUREAU.name} - 보고 통계`;
+}
 let history = [];
 let dailyChartInstance, catChartInstance, deptChartInstance;
 
@@ -197,9 +206,16 @@ async function fetchHistory(isRetry = false) {
   }
 }
 
+const MAX_PROCESSING_TIME_MS = 60 * 60 * 1000;
+
+function isValidProcessingRecord(record) {
+  return record.type === "완료" && Number.isFinite(record.processingTimeMs) &&
+    record.processingTimeMs > 0 && record.processingTimeMs < MAX_PROCESSING_TIME_MS;
+}
+
 function render() {
   const registered = history.filter(h => h.type === "등록");
-  const completed = history.filter(h => h.type === "완료" && h.processingTimeMs);
+  const completed = history.filter(isValidProcessingRecord);
 
   const todayStr = new Date().toISOString().split("T")[0];
   const monthPrefix = todayStr.slice(0, 7);
@@ -209,7 +225,7 @@ function render() {
 
   const avgProcessingMin = completed.length > 0
     ? Math.round(completed.reduce((sum, h) => sum + h.processingTimeMs, 0) / completed.length / 1000 / 60)
-    : 0;
+    : null;
 
   const categoryCounts = registered.reduce((acc, h) => {
     const cat = h.category || "기타";
@@ -223,7 +239,7 @@ function render() {
     const items = completed.filter(h => (h.category || "기타") === cat);
     acc[cat] = items.length > 0
       ? Math.round(items.reduce((sum, h) => sum + h.processingTimeMs, 0) / items.length / 1000 / 60)
-      : 0;
+      : null;
     return acc;
   }, {});
 
@@ -236,19 +252,19 @@ function render() {
   const prev7Total = registered.filter(h => prev7.includes(h.date)).length;
   const weekOverWeek = prev7Total > 0 ? Math.round(((last7Total - prev7Total) / prev7Total) * 100) : 0;
 
-  const bottleneckCategory = Object.entries(categoryAvgMin).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+  const bottleneckCategory = Object.entries(categoryAvgMin).filter(([, min]) => min !== null).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
 
   // ----- 텍스트 -----
   document.getElementById('monthlyTotal').innerText = `${monthlyTotal}건`;
   document.getElementById('todayTotal').innerText = `${todayTotal}건`;
-  document.getElementById('avgProcessing').innerText = `${avgProcessingMin}분`;
+  document.getElementById('avgProcessing').innerText = avgProcessingMin === null ? "자료 없음" : `${avgProcessingMin}분`;
   document.getElementById('topCategory').innerText = topCategory;
   document.getElementById('totalCategoryCount').innerText = totalCategoryCount;
 
   document.getElementById('insightText').innerHTML =
     `등록 건수 전주 대비 <span style="font-weight:600;color:#AFA9EC;">${weekOverWeek >= 0 ? weekOverWeek + '% 증가' : Math.abs(weekOverWeek) + '% 감소'}</span>. ` +
     `<span style="font-weight:600;color:#AFA9EC;">${topCategory} 분야</span>에 보고 집중. ` +
-    `<span style="font-weight:600;color:#AFA9EC;">${bottleneckCategory} 분야</span>는 평균 처리시간이 가장 길어 병목 구간으로 확인됨.`;
+    (bottleneckCategory === "-" ? "1시간 미만의 완료 보고가 없어 처리시간을 분석할 수 없습니다." : `<span style="font-weight:600;color:#AFA9EC;">${bottleneckCategory} 분야</span>는 평균 처리시간이 가장 길어 병목 구간으로 확인됨.`);
   document.getElementById('weekOverWeekVal').innerText = `${weekOverWeek >= 0 ? '+' : ''}${weekOverWeek}%`;
   document.getElementById('bottleneckVal').innerText = bottleneckCategory;
   document.getElementById('focusVal').innerText = topCategory;
@@ -307,7 +323,7 @@ function render() {
 
   // ----- 분야별 처리시간 차트 -----
   if (deptChartInstance) deptChartInstance.destroy();
-  const sorted = Object.entries(categoryAvgMin).sort((a, b) => b[1] - a[1]);
+  const sorted = Object.entries(categoryAvgMin).filter(([, min]) => min !== null).sort((a, b) => b[1] - a[1]);
   deptChartInstance = new Chart(document.getElementById('deptChart'), {
     type: 'bar',
     data: {
@@ -352,7 +368,7 @@ function handleExportExcel() {
     return acc;
   }, {});
   const dailyRows = Object.entries(dailyCountsMap).sort(([a], [b]) => a.localeCompare(b));
-  const categoryRows = Object.keys(s.categoryCounts).map(cat => [cat, s.categoryCounts[cat], s.categoryAvgMin[cat] || 0]);
+  const categoryRows = Object.keys(s.categoryCounts).map(cat => [cat, s.categoryCounts[cat], s.categoryAvgMin[cat] ?? "자료 없음"]);
 
   const wb = XLSX.utils.book_new();
   const summarySheet = XLSX.utils.aoa_to_sheet([
@@ -369,7 +385,8 @@ function handleExportExcel() {
     ["전체 요약"],
     ["이번 달 누적 등록", s.monthlyTotal],
     ["오늘 등록", s.todayTotal],
-    ["평균 처리시간(분)", s.avgProcessingMin],
+    ["평균 처리시간(분)", s.avgProcessingMin ?? "자료 없음"],
+    ["처리시간 집계 기준", "1시간 미만인 완료 보고만 반영 (1시간 이상 제외)"],
     ["최다 분야", s.topCategory],
     ["전주 대비 증감률(%)", s.weekOverWeek],
     ["병목 분야", s.bottleneckCategory]

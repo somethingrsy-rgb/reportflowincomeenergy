@@ -14,16 +14,25 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const title = payload?.notification?.title || payload?.data?.title || "국장실 보고대기";
-  const body = payload?.notification?.body || payload?.data?.body || "새 알림이 도착했습니다.";
+  // 서버가 webpush.notification을 포함하면 Android/브라우저가 백그라운드 알림을
+  // 자동 표시합니다. 이 경우 서비스워커에서 다시 표시하면 중복되므로 종료합니다.
+  if (payload?.notification?.title || payload?.notification?.body) return;
 
-  self.registration.showNotification(title, {
+  // data-only 메시지가 도착한 경우를 위한 안전한 fallback 표시입니다.
+  const title = payload?.data?.title || "국장실 보고대기";
+  const body = payload?.data?.body || "새 알림이 도착했습니다.";
+  const tag = payload?.data?.tag || `director-queue-${payload?.data?.type || 'alert'}-${Date.now()}`;
+
+  return self.registration.showNotification(title, {
     body,
-    icon: "./icons/icon-192.png",
-    badge: "./icons/icon-192.png",
-    tag: "director-queue-alert",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/notification-badge.png",
+    tag,
     renotify: true,
-    data: { url: "./index.html" }
+    requireInteraction: true,
+    vibrate: [250, 120, 250],
+    silent: false,
+    data: { url: payload?.data?.url || "/" }
   });
 });
 
@@ -32,14 +41,15 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v2-fcm";
+const CACHE_NAME = "director-queue-pwa-v4-android-notification";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/apple-touch-icon.png"
+  "./icons/apple-touch-icon.png",
+  "./icons/notification-badge.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -60,6 +70,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/.netlify/functions/')) return;
 
   // Firebase Realtime Database, FCM 등록(fcmregistrations.googleapis.com),
   // Firebase Installations 같은 구글 API 호출은 서비스워커가 가로채지 않고
