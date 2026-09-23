@@ -2031,7 +2031,8 @@ async function triggerPushForCurrentReporting() {
     });
     const result = await response.json().catch(() => ({}));
     console.log("Push notification result", result);
-    const delivered = response.ok && (result.sent || result.skipped === 'already-sent');
+    // 서버 함수는 "다음번 차례" 푸시만 담당한다. 함수가 정상 처리됐으면 성공으로 본다.
+    const delivered = response.ok && result.ok !== false;
     if (!delivered) showPushNotice('호출은 처리됐지만 푸시 알림 전송은 확인되지 않았습니다. 예약자에게 직접 확인해 주세요.');
     return !!delivered;
   } catch (error) {

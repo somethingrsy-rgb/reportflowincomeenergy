@@ -31,7 +31,8 @@ https://reportflowincomeenergy-git.netlify.app/.netlify/functions/send-next-noti
 구성 파일:
 - index.html: FCM 토큰 발급/저장 포함
 - service-worker.js: 백그라운드 FCM 수신 포함
-- netlify/functions/send-next-notification.js: 현재 REPORTING 대상자에게 푸시 발송
+- netlify/functions/send-next-notification.js: 대기 1번(다음 차례)에게 "다음번 차례입니다" 푸시 발송
+  ("내 차례" 알림은 서버 푸시 없이 앱 안 알림만 사용)
 - netlify/functions/notify-deputy.js: 국장님 부재중 전환 시 대리 수신자에게 푸시 발송
 - netlify.toml: Netlify Functions 경로 설정
 - package.json: firebase-admin 의존성
