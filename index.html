@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="보고대기">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
 <title>국장실 보고 대기 현황 및 예약 시스템</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" as="style" crossorigin="" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -581,7 +581,7 @@ body.light-mode #adminCard #awayLogArrow {
 </div>
 
 <div class="flex items-center gap-2" style="flex-wrap:nowrap; overflow-x:auto; max-width:100%;">
-<a id="statsLink" href="/stats.html" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
+<a href="./stats.html" class="inline-flex items-center justify-center rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-3 py-1.5 text-xs font-bold transition border border-gray-700/80">
 통계
 </a>
 
@@ -640,8 +640,8 @@ body.light-mode #adminCard #awayLogArrow {
 
 <div id="activeReporterBox" class="flex flex-col items-center justify-center py-6 text-center">
 <div class="mb-3 px-4 py-1 bg-gray-500/20 border border-gray-500/30 rounded-full text-gray-400 text-sm font-bold tracking-tight inline-block" id="activeDept">대기실 비어 있음</div>
-<h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight" id="activeName">국장실 비어 있음</h3>
-<p class="text-sm sm:text-base text-gray-300 mt-2 font-medium max-w-md" id="activeTitle">아래 대기열의 호출을 기다리거나 새로 예약을 등록하십시오.</p>
+<h3 class="text-2xl sm:text-3xl font-black text-white tracking-tight" id="activeName">현재 진행 중인 보고 없음</h3>
+<p class="text-sm sm:text-base text-gray-300 mt-2 font-medium max-w-md" id="activeTitle">대기자가 등록되면 이곳에 표시됩니다.</p>
 <div id="elapsedTimeBox" class="hidden mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-500/15 text-gray-300 border border-gray-500/30">
 <span id="elapsedTimeIcon">⏱️</span>
 <span id="elapsedTimeText"></span>
@@ -655,8 +655,11 @@ body.light-mode #adminCard #awayLogArrow {
 국장실 직속 단축 제어기 (관리자 활성)
 </span>
 </div>
-<div class="flex justify-center">
-<button onclick="adminCompleteCurrent()" class="always-white-text bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold py-2 px-3 rounded-lg text-xs transition duration-150 inline-flex items-center justify-center gap-1" style="width:100%; max-width:340px;">
+<div class="grid grid-cols-2 gap-3">
+<button onclick="adminCallNext()" class="always-white-text bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2 px-3 rounded-lg text-xs transition duration-150 inline-flex items-center justify-center gap-1">
+다음 대기자 호출
+</button>
+<button onclick="adminCompleteCurrent()" class="always-white-text bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold py-2 px-3 rounded-lg text-xs transition duration-150 inline-flex items-center justify-center gap-1">
 현재 팀 보고 완료
 </button>
 </div>
@@ -674,7 +677,7 @@ body.light-mode #adminCard #awayLogArrow {
 
 <div id="queueEmptyState" class="flex-grow flex flex-col items-center justify-center py-12 text-center text-gray-500">
 <p class="text-sm font-medium">대기 중인 팀이 없습니다.</p>
-<p id="queueEmptySubText" class="text-xs text-gray-600 mt-1">오른쪽 양식을 이용하여 새 예약을 등록해 주세요.</p>
+<p id="queueEmptySubText" class="text-xs text-gray-600 mt-1">오른쪽 양식을 이용하여 새 예약을 등록하거나 관리자 도구로 임의 시뮬레이션을 진행하십시오.</p>
 </div>
 
 <div id="queueList" class="space-y-3 hidden flex-grow overflow-y-auto max-h-[480px] pr-2"></div>
@@ -691,32 +694,38 @@ body.light-mode #adminCard #awayLogArrow {
 </h2>
 </div>
 <p class="text-xs text-gray-300 mb-4 font-medium leading-relaxed">
-국장실 직원이 사용하는 원격 제어판입니다. 보고 완료·현장 등록·부재중 설정·관리자 알림 기능을 간편하게 처리할 수 있습니다.
+국장실 직원이 사용하는 원격 제어판입니다. 순번 변경, 강제 진행, 동시접속 충돌 최소화를 위해 최우선 동기화 방식이 자동 적용됩니다.
 </p>
 
 <div class="space-y-3">
-<button onclick="adminCompleteCurrent()" class="always-white-text w-full bg-gradient-to-r from-violet-700 to-fuchsia-700 hover:from-violet-600 hover:to-fuchsia-600 text-white border border-violet-600/80 font-bold py-3 px-4 rounded-xl text-sm transition inline-flex items-center justify-center gap-1.5 focus:outline-none shadow-md">
-현재 팀 보고 완료
+<button onclick="adminCallNext()" class="always-white-text w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
+다음 순번 호출 및 국장실 입장 배정 (Call Next)
+</button>
+
+<button onclick="adminCompleteCurrent()" class="always-white-text w-full bg-gradient-to-r from-violet-700 to-fuchsia-700 hover:from-violet-600 hover:to-fuchsia-600 text-white border border-violet-600/80 font-bold py-3 px-4 rounded-xl text-xs transition inline-flex items-center justify-center gap-1.5 focus:outline-none">
+보고완료 누르기 → 다음 사람 자동 호출
 </button>
 
 <button onclick="openWalkInModal()" class="always-white-text w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
-🚶 예약 없이 입장한 팀 등록
+🚶 예약 없이 입장한 팀 즉시 등록 (바로 보고중 표시)
 </button>
 
 <div class="h-px bg-gray-800 my-4"></div>
 
-<div class="space-y-2">
-<p class="text-xs font-bold text-gray-400">국장님 부재중 설정</p>
-<button onclick="openDirectorStatusModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-bold py-2.5 px-3 rounded-lg text-xs transition">
-국장님 부재중 상태 설정
+<div class="grid grid-cols-2 gap-2">
+<button onclick="adminResetAll()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold py-2 px-3 rounded-lg text-xs transition inline-flex items-center justify-center gap-1">
+전체 리셋
+</button>
+<button onclick="adminSimulateQueue()" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-3 rounded-lg text-xs transition inline-flex items-center justify-center gap-1">
+테스트용 대기열 자동 생성
 </button>
 </div>
 
 <div class="h-px bg-gray-800 my-4"></div>
 
 <div class="space-y-2">
-<p class="text-xs font-bold text-gray-400">관리자 알림 수신기기</p>
-<button onclick="registerThisDeviceAsAdmin()" class="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2.5 px-3 rounded-lg text-xs transition">
+<p class="text-xs font-bold text-gray-400">신규 등록 알림 (관리자 전용)</p>
+<button onclick="registerThisDeviceAsAdmin()" class="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
 이 기기를 관리자 알림 수신기기로 등록
 </button>
 <p id="adminStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다.</p>
@@ -724,9 +733,16 @@ body.light-mode #adminCard #awayLogArrow {
 
 <div class="h-px bg-gray-800 my-4"></div>
 
-<button onclick="adminResetAll()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold py-2 px-3 rounded-lg text-xs transition inline-flex items-center justify-center gap-1">
-전체 리셋
+<div class="space-y-2">
+<p class="text-xs font-bold text-gray-400">국장님 부재중 / 대리 수신자 설정</p>
+<button onclick="openDirectorStatusModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
+국장님 부재중 상태 설정
 </button>
+<button onclick="registerThisDeviceAsDeputy()" class="w-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
+이 기기를 대리 수신자로 등록
+</button>
+<p id="deputyStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 대리 수신자가 등록되어 있습니다.</p>
+</div>
 
 <div class="h-px bg-gray-800 my-4"></div>
 
@@ -813,7 +829,13 @@ body.light-mode #adminCard #awayLogArrow {
 <form id="registerForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
 <div>
 <label class="block text-xs font-bold text-gray-300 mb-2">업무 분야</label>
-<div id="quickDeptChips" class="flex flex-wrap gap-2 mb-2"></div>
+<div class="flex flex-wrap gap-2 mb-2">
+<button type="button" data-dept="소득" onclick="setQuickDept(&#39;소득&#39;)" class="dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">소득</button>
+<button type="button" data-dept="보험" onclick="setQuickDept(&#39;보험&#39;)" class="dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">보험</button>
+<button type="button" data-dept="에너지" onclick="setQuickDept(&#39;에너지&#39;)" class="dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">에너지</button>
+<button type="button" data-dept="재해" onclick="setQuickDept(&#39;재해&#39;)" class="dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">재해</button>
+<button type="button" data-dept="탄소" onclick="setQuickDept(&#39;탄소&#39;)" class="dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">탄소</button>
+</div>
 <input type="text" id="deptInput" required="" placeholder="분야를 선택하거나 직접 작성하세요" class="w-full bg-slate-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
 </div>
 
@@ -884,7 +906,13 @@ body.light-mode #adminCard #awayLogArrow {
 
     <div class="mb-3">
       <label class="block text-xs font-bold text-gray-300 mb-1.5">업무 분야 <span class="text-amber-400">*</span></label>
-      <div id="walkInDeptChips" class="flex flex-wrap gap-1.5 mb-2"></div>
+      <div class="flex flex-wrap gap-1.5 mb-2">
+        <button type="button" onclick="setWalkInDept('소득')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">소득</button>
+        <button type="button" onclick="setWalkInDept('보험')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">보험</button>
+        <button type="button" onclick="setWalkInDept('에너지')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">에너지</button>
+        <button type="button" onclick="setWalkInDept('재해')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">재해</button>
+        <button type="button" onclick="setWalkInDept('탄소')" class="walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition">탄소</button>
+      </div>
       <input id="walkInDeptInput" type="text" placeholder="분야를 선택하거나 직접 작성하세요" class="w-full bg-slate-950 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all">
     </div>
 
@@ -916,17 +944,8 @@ body.light-mode #adminCard #awayLogArrow {
 </div>
 </footer>
 
-<script src="/bureau-config.js"></script>
 <script>
-const BUREAU = window.getCurrentBureauConfig();
-const FIREBASE_DB_BASE = "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app";
-const BUREAU_STATE_PATH = BUREAU.legacy ? "/directorQueue/v1/state" : `/directorQueues/${BUREAU.id}/v1/state`;
-const FIREBASE_DB_URL = FIREBASE_DB_BASE + BUREAU_STATE_PATH + ".json";
-
-function bureauStorageKey(key) {
-  return BUREAU.legacy ? key : `${key}__${BUREAU.id}`;
-}
-
+const FIREBASE_DB_URL = "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app/directorQueue/v1/state.json";
 
 // 익명 로그인 토큰을 주소 뒤에 붙여서, Database 규칙이 "로그인한 사람만 허용"으로
 // 바뀌어도 이 사이트는 계속 정상 작동하도록 해주는 함수
@@ -968,44 +987,26 @@ let isExpandedCompleted = false;
 let isAdminMode = false;
 let isDirectorMode = false;
 
-function renderBureauConfig() {
-  const depts = Array.isArray(BUREAU.quickDepartments) ? BUREAU.quickDepartments : [];
-  const buttonClass = "dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition";
-  const walkClass = "walkin-dept-chip bg-slate-800 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold border border-transparent transition";
-  const q = document.getElementById('quickDeptChips');
-  const w = document.getElementById('walkInDeptChips');
-  if (q) q.innerHTML = depts.map(d => `<button type="button" data-dept="${escapeHtml(d)}" class="${buttonClass}">${escapeHtml(d)}</button>`).join('');
-  if (q) q.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => setQuickDept(btn.dataset.dept)));
-  if (w) w.innerHTML = depts.map(d => `<button type="button" data-dept="${escapeHtml(d)}" class="${walkClass}">${escapeHtml(d)}</button>`).join('');
-  if (w) w.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => setWalkInDept(btn.dataset.dept)));
-  const stats = document.getElementById('statsLink');
-  if (stats) stats.href = BUREAU.legacy ? '/stats.html' : `/b/${encodeURIComponent(BUREAU.id)}/stats`;
-  if (!BUREAU.legacy && BUREAU.name) {
-    document.title = `${BUREAU.name} - 국장실 보고 대기 시스템`;
-  }
-}
-
 window.addEventListener('DOMContentLoaded', () => {
-  renderBureauConfig();
   if (localStorage.getItem('themeMode') === 'light') {
     document.body.classList.add('light-mode');
     document.getElementById('themeToggleBtn').innerText = '다크';
   }
 
   // 토큰이 유효할 때만 모드 복원 (만료 시 PIN 팝업 없이 조용히 해제)
-  if (localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isAdminMode') : 'isAdminMode')) === 'true') {
+  if (localStorage.getItem('isAdminMode') === 'true') {
     if (getAdminToken()) {
       toggleAdminMode(true);
     } else {
-      localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isAdminMode') : 'isAdminMode'), 'false');
+      localStorage.setItem('isAdminMode', 'false');
     }
   }
 
-  if (localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isDirectorMode') : 'isDirectorMode')) === 'true') {
+  if (localStorage.getItem('isDirectorMode') === 'true') {
     if (getAdminToken()) {
       toggleDirectorMode(true);
     } else {
-      localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isDirectorMode') : 'isDirectorMode'), 'false');
+      localStorage.setItem('isDirectorMode', 'false');
     }
   }
 
@@ -1164,7 +1165,7 @@ async function mutateState(mutateFn, options = {}) {
         const writeResponse = await fetch("/.netlify/functions/admin-write", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy'), token: getAdminToken(), nextState })
+          body: JSON.stringify({ token: getAdminToken(), nextState })
         });
 
         if (writeResponse.status === 401) {
@@ -1188,7 +1189,7 @@ async function mutateState(mutateFn, options = {}) {
       const writeResponse = await fetch("/.netlify/functions/queue-write", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy'), nextState, expectedUpdatedAt: currentState.updatedAt || "0" })
+        body: JSON.stringify({ nextState, expectedUpdatedAt: currentState.updatedAt || "0" })
       });
 
       if (writeResponse.status === 409) {
@@ -1231,19 +1232,19 @@ function toggleThemeMode() {
 let pendingPinAction = null;
 
 function getAdminToken() {
-  const token = localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminToken') : 'adminToken'));
-  const expiresAt = Number(localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminTokenExpiresAt') : 'adminTokenExpiresAt')) || 0);
+  const token = localStorage.getItem('adminToken');
+  const expiresAt = Number(localStorage.getItem('adminTokenExpiresAt') || 0);
   return (token && Date.now() < expiresAt) ? token : null;
 }
 
 function clearAdminSession() {
-  localStorage.removeItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminToken') : 'adminToken'));
-  localStorage.removeItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminTokenExpiresAt') : 'adminTokenExpiresAt'));
-  localStorage.removeItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('accessPinVerified') : 'accessPinVerified'));
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminTokenExpiresAt');
+  localStorage.removeItem('accessPinVerified');
   isAdminMode = false;
   isDirectorMode = false;
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isAdminMode') : 'isAdminMode'), 'false');
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isDirectorMode') : 'isDirectorMode'), 'false');
+  localStorage.setItem('isAdminMode', 'false');
+  localStorage.setItem('isDirectorMode', 'false');
 }
 
 // localStorage에 토큰을 저장하므로, 한 번 맞게 입력하면 이 기기에서는
@@ -1273,7 +1274,7 @@ async function submitPin() {
     const response = await fetch("/.netlify/functions/verify-pin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy'), pin: val })
+      body: JSON.stringify({ pin: val })
     });
     const result = await response.json().catch(() => ({}));
 
@@ -1284,9 +1285,9 @@ async function submitPin() {
       return;
     }
 
-    localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminToken') : 'adminToken'), result.token);
-    localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('adminTokenExpiresAt') : 'adminTokenExpiresAt'), String(result.expiresAt));
-    localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('accessPinVerified') : 'accessPinVerified'), 'true');
+    localStorage.setItem('adminToken', result.token);
+    localStorage.setItem('adminTokenExpiresAt', String(result.expiresAt));
+    localStorage.setItem('accessPinVerified', 'true');
     document.getElementById('pinOverlay').classList.add('hidden');
     const action = pendingPinAction;
     pendingPinAction = null;
@@ -1306,7 +1307,7 @@ function toggleDirectorMode(forceState = null) {
   }
 
   isDirectorMode = turningOn;
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isDirectorMode') : 'isDirectorMode'), isDirectorMode ? 'true' : 'false');
+  localStorage.setItem('isDirectorMode', isDirectorMode ? 'true' : 'false');
 
   const body = document.body;
   const left = document.getElementById('leftDashboardColumn');
@@ -1343,7 +1344,7 @@ function toggleDirectorMode(forceState = null) {
     btn.className = "always-white-text inline-flex items-center justify-center rounded-lg bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 text-xs font-bold transition border border-violet-500/80";
     subtitle.innerText = "웹브라우저 모니터링 및 관리자 원격 호출 지원";
     queueHelperText.innerText = "대기 순서대로 배치되며 관리자가 상시 조율 가능합니다";
-    queueEmptySubText.innerText = "오른쪽 양식을 이용하여 새 예약을 등록해 주세요.";
+    queueEmptySubText.innerText = "오른쪽 양식을 이용하여 새 예약을 등록하거나 관리자 도구로 임의 시뮬레이션을 진행하십시오.";
   }
 
   renderUI();
@@ -1357,7 +1358,7 @@ function toggleAdminMode(forceState = null) {
   }
 
   isAdminMode = turningOn;
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('isAdminMode') : 'isAdminMode'), isAdminMode ? 'true' : 'false');
+  localStorage.setItem('isAdminMode', isAdminMode ? 'true' : 'false');
 
   const adminCard = document.getElementById('adminCard');
   const quickAdminBox = document.getElementById('quickAdminSection');
@@ -1559,15 +1560,15 @@ function renderUI() {
 // 이 브라우저에서 등록한 모든 예약을 보관하고 기존 단일 ID도 이관한다.
 function getMyBookingIds() {
   let ids;
-  try { ids = JSON.parse(localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_ids') : 'my_booking_ids')) || '[]'); }
+  try { ids = JSON.parse(localStorage.getItem('my_booking_ids') || '[]'); }
   catch { ids = []; }
   if (!Array.isArray(ids)) ids = [];
   ids = [...new Set(ids.map(String).filter(id => /^\d+$/.test(id)))];
-  const legacyId = localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_id') : 'my_booking_id'));
+  const legacyId = localStorage.getItem('my_booking_id');
   if (legacyId && /^\d+$/.test(legacyId)) {
     if (!ids.includes(legacyId)) ids.push(legacyId);
-    localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_ids') : 'my_booking_ids'), JSON.stringify(ids));
-    localStorage.removeItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_id') : 'my_booking_id'));
+    localStorage.setItem('my_booking_ids', JSON.stringify(ids));
+    localStorage.removeItem('my_booking_id');
   }
   return ids;
 }
@@ -1575,35 +1576,17 @@ function getMyBookingIds() {
 function rememberMyBooking(id) {
   const ids = getMyBookingIds();
   if (!ids.includes(String(id))) ids.push(String(id));
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_ids') : 'my_booking_ids'), JSON.stringify(ids));
+  localStorage.setItem('my_booking_ids', JSON.stringify(ids));
 }
 
 function forgetMyBooking(id) {
-  localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('my_booking_ids') : 'my_booking_ids'), JSON.stringify(
+  localStorage.setItem('my_booking_ids', JSON.stringify(
     getMyBookingIds().filter(savedId => savedId !== String(id))
   ));
 }
 
 function getSelectedMyBookingId() {
-  let ids = getMyBookingIds();
-
-  // 재실행/브라우저 복원 과정에서 예약 ID 목록이 유실되거나 아직 이관되지 않았더라도,
-  // 이 기기에 저장된 FCM 토큰이 서버 예약의 토큰과 같으면 내 예약으로 자동 복원한다.
-  // 특히 REPORTING 상태에서 "보고완료" 버튼이 재실행 후 사라지는 문제를 막는다.
-  const deviceToken = localStorage.getItem('fcm_token') || '';
-  if (deviceToken) {
-    const recoverable = localState.bookings.filter(b =>
-      b && ['WAITING','REPORTING'].includes(b.status) && b.fcmToken === deviceToken
-    );
-    for (const booking of recoverable) {
-      const id = String(booking.id);
-      if (!ids.includes(id)) {
-        rememberMyBooking(id);
-        ids.push(id);
-      }
-    }
-  }
-
+  const ids = getMyBookingIds();
   const mine = localState.bookings.filter(b => ids.includes(String(b.id)));
   const selected = mine.find(b => b.status === 'REPORTING') ||
     getOrderedWaitingList(mine)[0] || mine.find(b => b.status === 'COMPLETED');
@@ -1732,10 +1715,18 @@ function checkMyStatusTriggers() {
     playChime();
   }
 
-  // "앞에 1팀 남았습니다" 알림은 서버 FCM에서 직접 전송합니다.
-  // 화면이 백그라운드/절전 상태여도 안정적으로 받도록 클라이언트 중복 알림은 사용하지 않습니다.
   if (myBooking.status === "WAITING") {
-    preCallAlertTriggered = false;
+    const waitingList = getOrderedWaitingList(localState.bookings);
+    const pos = waitingList.findIndex(b => b.id === myId) + 1;
+    const preCallTiming = localState.preCallTimingCount || 2;
+
+    if (pos > 0 && pos <= preCallTiming && !preCallAlertTriggered) {
+      sendBrowserNotification("보고 대기 순번 임박 예보!", `앞에 대기중인 팀이 ${pos}팀 남았습니다. 국장실 근처로 이동해주십시오.`);
+      playChime();
+      preCallAlertTriggered = true;
+    } else if (pos > preCallTiming) {
+      preCallAlertTriggered = false;
+    }
   }
 
   lastKnownStatus = myBooking.status;
@@ -1771,21 +1762,15 @@ function needsIosInstall() {
   return ios && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches;
 }
 
-async function sendBrowserNotification(title, text, options = {}) {
+async function sendBrowserNotification(title, text) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
   try {
     if (!('serviceWorker' in navigator)) throw new Error('서비스워커 미지원');
-    const swRegistration = await navigator.serviceWorker.register('/service-worker.js', { updateViaCache: 'none' });
-    try { await swRegistration.update(); } catch (_) {}
+    await navigator.serviceWorker.register('./service-worker.js');
     const registration = await navigator.serviceWorker.ready;
-    const uniquePart = options.tag || options.bookingId || options.type || Date.now();
     await registration.showNotification(title, {
-      body: text, icon: '/icons/icon-192.png', badge: '/icons/notification-badge.png',
-      vibrate: [250, 120, 250], silent: false,
-      tag: 'director-queue-' + uniquePart,
-      renotify: true,
-      requireInteraction: true,
-      data: { url: options.url || '/' }
+      body: text, icon: './icons/icon-192.png', badge: './icons/icon-192.png',
+      tag: 'director-queue-' + title, data: { url: './index.html' }
     });
     return true;
   } catch (error) {
@@ -1802,7 +1787,7 @@ async function syncPushToken(token) {
   lastPushSyncAttempt = Date.now();
   try {
     const ids = getMyBookingIds();
-    const previous = localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('fcm_linked_token') : 'fcm_linked_token'));
+    const previous = localStorage.getItem('fcm_linked_token');
     const ownsAdmin = previous && localState.adminFcmToken === previous;
     const ownsDeputy = previous && localState.deputyFcmToken === previous;
     const updateRoles = (ownsAdmin || ownsDeputy) && !!getAdminToken();
@@ -1821,7 +1806,7 @@ async function syncPushToken(token) {
       return state;
     }, { requireAdmin: !!updateRoles });
     if (success) {
-      if (!(ownsAdmin || ownsDeputy) || updateRoles) localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('fcm_linked_token') : 'fcm_linked_token'), token);
+      if (!(ownsAdmin || ownsDeputy) || updateRoles) localStorage.setItem('fcm_linked_token', token);
       showPushNotice('이 기기의 예약 알림 연결이 완료되었습니다.');
       if (localState.bookings.some(b => ids.includes(String(b.id)) && b.status === 'REPORTING')) {
         await triggerPushForCurrentReporting();
@@ -2005,7 +1990,7 @@ async function notifyAdminOfNewRegistration(payload) {
     const response = await fetch("/.netlify/functions/notify-admin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...(payload || {}), bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy') })
+      body: JSON.stringify(payload || {})
     });
     const result = await response.json();
     if (!response.ok || !result.sent) showPushNotice("예약은 접수됐지만 관리자 알림을 전달하지 못했습니다. 관리자 수신기기 등록 상태를 확인해 주세요.");
@@ -2040,11 +2025,11 @@ async function triggerPushForCurrentReporting() {
     const response = await fetch("/.netlify/functions/send-next-notification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy'), source: "director-queue-app", at: Date.now() })
+      body: JSON.stringify({ source: "director-queue-app", at: Date.now() })
     });
     const result = await response.json().catch(() => ({}));
     console.log("Push notification result", result);
-    const delivered = response.ok && (result.currentSent || result.sent || result.currentSkipped === 'already-sent' || result.skipped === 'already-sent');
+    const delivered = response.ok && (result.sent || result.skipped === 'already-sent');
     if (!delivered) showPushNotice('호출은 처리됐지만 푸시 알림 전송은 확인되지 않았습니다. 예약자에게 직접 확인해 주세요.');
     return !!delivered;
   } catch (error) {
@@ -2057,6 +2042,8 @@ async function triggerPushForCurrentReporting() {
 async function completeMyReportAndCallNext() {
   const myIdStr = getSelectedMyBookingId();
   if (!myIdStr) return;
+
+  if (!confirm("보고를 완료하고 다음 대기자를 호출하시겠습니까?")) return;
 
   const myId = parseInt(myIdStr, 10);
   let deferredDueToAway = false;
@@ -2089,10 +2076,10 @@ async function completeMyReportAndCallNext() {
     forgetMyBooking(myId);
     updateMyBookingUI();
     if (deferredDueToAway) {
-      if (typeof showPushNotice === "function") showPushNotice("보고 완료 · 국장님 부재중으로 다음 순번은 복귀 후 자동 호출됩니다.");
+      alert("보고완료 처리되었습니다. 국장님이 부재중이라 다음 순번 호출은 복귀 후 자동으로 진행됩니다.");
     } else {
       await triggerPushForCurrentReporting();
-      if (typeof showPushNotice === "function") showPushNotice("보고 완료 · 다음 대기자를 자동 호출했습니다.");
+      alert("보고완료 처리되었습니다. 다음 대기자가 호출됩니다.");
     }
     playChime();
   }
@@ -2163,10 +2150,10 @@ async function adminCompleteCurrent() {
 
   if (success) {
     if (deferredDueToAway) {
-      if (typeof showPushNotice === "function") showPushNotice("보고 완료 · 국장님 부재중으로 다음 순번은 복귀 후 자동 호출됩니다.");
+      alert("보고완료 처리되었습니다. 국장님이 부재중이라 다음 순번 호출은 복귀 후 자동으로 진행됩니다.");
     } else {
       await triggerPushForCurrentReporting();
-      if (typeof showPushNotice === "function") showPushNotice("보고 완료 · 다음 대기자가 있으면 자동 호출했습니다.");
+      alert("보고완료 처리되었습니다. 다음 대기자가 자동 호출됩니다.");
     }
     playChime();
   }
@@ -2795,7 +2782,7 @@ async function notifyDeputyOfAwayStatus() {
     await fetch("/.netlify/functions/notify-deputy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bureauId: (typeof BUREAU !== 'undefined' && BUREAU.id ? BUREAU.id : 'income-energy'), at: Date.now() })
+      body: JSON.stringify({ at: Date.now() })
     });
   } catch (error) {
     console.error("Deputy notify failed", error);
@@ -2820,7 +2807,7 @@ async function registerThisDeviceAsAdmin() {
   }, { requireAdmin: true });
 
   if (success) {
-    localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey("fcm_linked_token") : "fcm_linked_token"), token);
+    localStorage.setItem("fcm_linked_token", token);
     alert("이 기기가 관리자 알림 수신기기로 등록되었습니다.\n앞으로 신규 등록이 있을 때마다 이 기기로 알림이 전달됩니다.");
   }
 }
@@ -2959,8 +2946,7 @@ let messaging = null;
 
 async function getServiceWorkerRegistration() {
   if (!("serviceWorker" in navigator)) return null;
-  const registration = await navigator.serviceWorker.register("/service-worker.js", { updateViaCache: "none" });
-  try { await registration.update(); } catch (_) {}
+  await navigator.serviceWorker.register("./service-worker.js");
   return await navigator.serviceWorker.ready;
 }
 
@@ -2983,7 +2969,7 @@ async function initializePushConnection() {
 
     if (token) {
       const oldToken = localStorage.getItem('fcm_token');
-      if (!localStorage.getItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('fcm_linked_token') : 'fcm_linked_token')) && oldToken) localStorage.setItem((typeof bureauStorageKey === 'function' ? bureauStorageKey('fcm_linked_token') : 'fcm_linked_token'), oldToken);
+      if (!localStorage.getItem('fcm_linked_token') && oldToken) localStorage.setItem('fcm_linked_token', oldToken);
       localStorage.setItem("fcm_token", token);
       await syncPushToken(token);
       return token;
@@ -3010,14 +2996,9 @@ window.getStoredFcmToken = async function getStoredFcmToken() {
 if (await isSupported()) {
   messaging = getMessaging(app);
   onMessage(messaging, (payload) => {
-    const title = payload?.data?.title || payload?.notification?.title || "국장실 보고대기";
-    const body = payload?.data?.body || payload?.notification?.body || "새 알림이 도착했습니다.";
-    sendBrowserNotification(title, body, {
-      type: payload?.data?.type || 'foreground',
-      bookingId: payload?.data?.bookingId || '',
-      tag: payload?.data?.tag || '',
-      url: payload?.data?.url || '/'
-    });
+    const title = payload?.notification?.title || payload?.data?.title || "국장실 보고대기";
+    const body = payload?.notification?.body || payload?.data?.body || "새 알림이 도착했습니다.";
+    sendBrowserNotification(title, body);
     playChime();
   });
 }
@@ -3027,20 +3008,15 @@ function refreshPushConnection() {
 }
 refreshPushConnection();
 window.addEventListener('online', refreshPushConnection);
-window.addEventListener('focus', refreshPushConnection);
-window.addEventListener('pageshow', refreshPushConnection);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') refreshPushConnection();
 });
-// Android Chrome에서 장시간 열린 화면의 FCM 토큰/서비스워커 상태가 낡는 경우를 줄이기 위해
-// 5분마다 가볍게 연결 상태를 재확인합니다. getToken은 기존 토큰이 유효하면 재사용됩니다.
-setInterval(refreshPushConnection, 5 * 60 * 1000);
 </script>
 
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+    navigator.serviceWorker.register("./service-worker.js").catch((error) => {
       console.log("Service Worker registration failed:", error);
     });
   });
