@@ -1157,8 +1157,12 @@ async function mutateState(mutateFn, options = {}) {
         throw new Error("서버 상태 저장 실패");
       }
 
-      localState = nextState;
+      const writeResult = await writeResponse.json();
+      localState = writeResult.state || nextState;
       renderUI();
+      if (writeResult.adminNotifications?.some(result => !result.sent)) {
+        alert("예약은 정상 접수됐지만 관리자 푸시 전송을 완료하지 못했습니다. 관리자 수신기기 등록 상태 또는 서버 로그를 확인해 주세요.");
+      }
       return true;
     } catch (error) {
       console.error("Mutation failed:", error);
@@ -1927,8 +1931,7 @@ async function handleFormSubmit(event) {
       document.getElementById('titleInput').value = "";
       alert("성공적으로 예약 대기 신청이 접수되었습니다.");
       playChime();
-      // 관리자 알림은 결과를 기다릴 필요가 없으므로 백그라운드로 전송
-      notifyAdminOfNewRegistration({ department: dept, reporterName: reporter, title: title });
+      // 관리자 푸시는 예약 저장 서버에서 전송합니다.
     }
   } finally {
     // 성공/실패와 관계없이 버튼을 원래 상태로 복구
@@ -1936,21 +1939,6 @@ async function handleFormSubmit(event) {
     submitBtn.disabled = false;
     submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
     submitBtn.innerHTML = originalBtnHtml;
-  }
-}
-
-async function notifyAdminOfNewRegistration(payload) {
-  try {
-    const response = await fetch("/.netlify/functions/notify-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload || {})
-    });
-    const result = await response.json();
-    if (!response.ok || !result.sent) showPushNotice("예약은 접수됐지만 관리자 알림을 전달하지 못했습니다. 관리자 수신기기 등록 상태를 확인해 주세요.");
-  } catch (error) {
-    console.error("Admin notify failed", error);
-    showPushNotice("예약은 접수됐지만 관리자 알림 전송에 실패했습니다.");
   }
 }
 
