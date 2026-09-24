@@ -520,16 +520,6 @@ body.light-mode #adminCard button.bg-red-500\/10:hover {
   background: #FEE2E2 !important;
 }
 
-/* 테스트용 대기열 자동 생성 버튼 */
-body.light-mode #adminCard button.bg-indigo-500\/10 {
-  background: #EEF2FF !important;
-  color: #3730A3 !important;
-  border-color: #A5B4FC !important;
-}
-body.light-mode #adminCard button.bg-indigo-500\/10:hover {
-  background: #E0E7FF !important;
-}
-
 /* 국장님 부재중 상태 설정 버튼 */
 body.light-mode #adminCard button.bg-amber-500\/10 {
   background: #FFF7ED !important;
@@ -538,26 +528,6 @@ body.light-mode #adminCard button.bg-amber-500\/10 {
 }
 body.light-mode #adminCard button.bg-amber-500\/10:hover {
   background: #FFEDD5 !important;
-}
-
-/* 대리 수신자 등록 버튼 */
-body.light-mode #adminCard button.bg-sky-500\/10 {
-  background: #EFF6FF !important;
-  color: #1D4ED8 !important;
-  border-color: #93C5FD !important;
-}
-body.light-mode #adminCard button.bg-sky-500\/10:hover {
-  background: #DBEAFE !important;
-}
-
-/* 부재중 이력 펼침 영역 */
-body.light-mode #adminCard #awayLogContainer {
-  background: rgba(255,255,255,0.74) !important;
-  border-radius: 12px !important;
-}
-
-body.light-mode #adminCard #awayLogArrow {
-  color: #6D28D9 !important;
 }
 
 </style>
@@ -697,27 +667,28 @@ body.light-mode #adminCard #awayLogArrow {
 국장실 직원이 사용하는 원격 제어판입니다. 순번 변경, 강제 진행, 동시접속 충돌 최소화를 위해 최우선 동기화 방식이 자동 적용됩니다.
 </p>
 
+<div id="adminSummary" class="mb-4" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<div class="rounded-lg p-2 text-center" style="background:rgba(128,128,128,0.14)"><p class="text-[10px] text-gray-400">대기</p><p id="sumWaiting" class="text-lg font-black text-gray-300">-</p></div>
+<div class="rounded-lg p-2 text-center" style="background:rgba(128,128,128,0.14)"><p class="text-[10px] text-gray-400">평균 보고(오늘)</p><p id="sumAvg" class="text-lg font-black text-gray-300">-</p></div>
+<div class="rounded-lg p-2 text-center" style="background:rgba(128,128,128,0.14)"><p class="text-[10px] text-gray-400">현재 경과</p><p id="sumElapsed" class="text-lg font-black text-gray-300">-</p></div>
+</div>
+
 <div class="space-y-3">
-<button onclick="adminCallNext()" class="always-white-text w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
-다음 순번 호출 및 국장실 입장 배정 (Call Next)
-</button>
-
-<button onclick="adminCompleteCurrent()" class="always-white-text w-full bg-gradient-to-r from-violet-700 to-fuchsia-700 hover:from-violet-600 hover:to-fuchsia-600 text-white border border-violet-600/80 font-bold py-3 px-4 rounded-xl text-xs transition inline-flex items-center justify-center gap-1.5 focus:outline-none">
-보고완료 누르기 → 다음 사람 자동 호출
-</button>
-
-<button onclick="openWalkInModal()" class="always-white-text w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
-🚶 예약 없이 입장한 팀 즉시 등록 (바로 보고중 표시)
-</button>
-
-<div class="h-px bg-gray-800 my-4"></div>
-
 <div class="grid grid-cols-2 gap-2">
-<button onclick="adminResetAll()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold py-2 px-3 rounded-lg text-xs transition inline-flex items-center justify-center gap-1">
-전체 리셋
+<button onclick="adminCallNext()" class="always-white-text w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-2 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
+다음 대기자 호출
 </button>
-<button onclick="adminSimulateQueue()" class="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-bold py-2 px-3 rounded-lg text-xs transition inline-flex items-center justify-center gap-1">
-테스트용 대기열 자동 생성
+
+<button onclick="adminCompleteCurrent()" class="always-white-text w-full bg-gradient-to-r from-violet-700 to-fuchsia-700 hover:from-violet-600 hover:to-fuchsia-600 text-white border border-violet-600/80 font-bold py-3 px-2 rounded-xl text-xs transition inline-flex items-center justify-center gap-1.5 focus:outline-none">
+보고 완료
+</button>
+
+<button onclick="openWalkInModal()" class="always-white-text w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-2 rounded-xl text-xs transition shadow-md inline-flex items-center justify-center gap-1.5 focus:outline-none">
+현장 등록
+</button>
+
+<button id="adminAwayBtn" onclick="openDirectorStatusModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-bold py-3 px-2 rounded-xl text-xs transition inline-flex items-center justify-center gap-1.5 focus:outline-none">
+부재중 설정
 </button>
 </div>
 
@@ -733,40 +704,21 @@ body.light-mode #adminCard #awayLogArrow {
 
 <div class="h-px bg-gray-800 my-4"></div>
 
-<div class="space-y-2">
-<p class="text-xs font-bold text-gray-400">국장님 부재중 / 대리 수신자 설정</p>
-<button onclick="openDirectorStatusModal()" class="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
-국장님 부재중 상태 설정
+<div>
+<button onclick="toggleDangerZone()" class="w-full flex items-center justify-between text-left focus:outline-none">
+<span class="text-xs font-bold text-red-400">⚠ 위험 구역</span>
+<span id="dangerZoneArrow" class="text-gray-500 text-xs">⌄</span>
 </button>
-<button onclick="registerThisDeviceAsDeputy()" class="w-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
-이 기기를 대리 수신자로 등록
+<div id="dangerZoneBox" class="hidden mt-2 space-y-2">
+<p class="text-[11px] text-gray-500">전체 대기열과 완료 이력을 모두 삭제하며 취소할 수 없습니다. 계속하려면 아래 칸에 <span class="font-bold">리셋</span>을 입력하세요.</p>
+<input id="resetConfirmInput" type="text" autocomplete="off" placeholder="리셋" oninput="document.getElementById('resetConfirmError').classList.add('hidden')" class="w-full rounded-lg px-3 py-2 text-xs focus:outline-none" style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:inherit">
+<p id="resetConfirmError" class="hidden text-[11px] text-red-400">"리셋"을 정확히 입력해 주세요.</p>
+<button onclick="adminResetAll()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold py-2 px-3 rounded-lg text-xs transition">
+전체 리셋
 </button>
-<p id="deputyStatusText" class="text-[11px] text-gray-500">✓ 이 시스템에 대리 수신자가 등록되어 있습니다.</p>
+</div>
 </div>
 
-<div class="h-px bg-gray-800 my-4"></div>
-
-<button onclick="toggleAwayLogSection()" class="w-full flex items-center justify-between text-left focus:outline-none group">
-<span class="text-xs font-bold text-gray-400 group-hover:text-white transition">부재중 이력</span>
-<span id="awayLogArrow" class="text-gray-500 text-xs transform transition-transform duration-200">⌄</span>
-</button>
-<div id="awayLogContainer" class="hidden mt-2 space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
-      <div class="p-2 border border-gray-800/60 bg-slate-950/30 rounded-lg text-[11px]">
-        <div class="flex items-center justify-between">
-          <span class="font-bold text-amber-300">외부회의</span>
-          <span class="text-gray-500">6. 23. 오전 11:03 ~ 오후 01:56</span>
-        </div>
-        
-      </div>
-    
-      <div class="p-2 border border-gray-800/60 bg-slate-950/30 rounded-lg text-[11px]">
-        <div class="flex items-center justify-between">
-          <span class="font-bold text-amber-300">외부회의</span>
-          <span class="text-gray-500">6. 22. 오후 05:52 ~ 오후 06:10</span>
-        </div>
-        <p class="text-gray-500 mt-0.5">ㅎ러</p>
-      </div>
-    </div>
 </div>
 </div>
 
@@ -967,7 +919,6 @@ let localState = {
 };
 
 let selectedAwayReason = "출장";
-let isAwayLogExpanded = false;
 
 function ensureDirectorStatusDefaults(state) {
   if (!state.directorStatus) {
@@ -1537,9 +1488,8 @@ function renderUI() {
 
   updateMyBookingUI();
   renderDirectorStatusUI();
-  renderDeputyStatus();
   renderAdminStatus();
-  renderAwayLog();
+  renderAdminSummary();
 
   const adminCardEl = document.getElementById('adminCard');
   const quickAdminBoxEl = document.getElementById('quickAdminSection');
@@ -2521,66 +2471,62 @@ async function directorDragEnd(event) {
   if (success) playChime();
 }
 
+function toggleDangerZone(forceClose) {
+  const box = document.getElementById('dangerZoneBox');
+  const arrow = document.getElementById('dangerZoneArrow');
+  const open = forceClose ? false : box.classList.contains('hidden');
+  box.classList.toggle('hidden', !open);
+  arrow.innerText = open ? '⌃' : '⌄';
+}
+
 async function adminResetAll() {
-  if (!confirm("전체 대기열 및 완료 이력을 모두 리셋하시겠습니까? 이 동작은 취소할 수 없습니다.")) return;
+  const input = document.getElementById('resetConfirmInput');
+  const error = document.getElementById('resetConfirmError');
+  if (input.value.trim() !== '리셋') {
+    error.classList.remove('hidden');
+    input.focus();
+    return;
+  }
 
   const success = await mutateState((freshState) => {
     freshState.bookings = [];
     return freshState;
   }, { requireAdmin: true });
 
-  if (success) alert("전체 데이터가 리셋되었습니다.");
+  if (success) {
+    input.value = '';
+    toggleDangerZone(true);
+    alert("전체 데이터가 리셋되었습니다.");
+  }
 }
 
-async function adminSimulateQueue() {
-  const success = await mutateState((freshState) => {
-    freshState.bookings = freshState.bookings.filter(b => b.status === "COMPLETED");
+function renderAdminSummary() {
+  const waitingEl = document.getElementById('sumWaiting');
+  if (!waitingEl) return;
 
-    const timeOffset = Date.now();
-    const demoItems = [
-      {
-        id: timeOffset,
-        department: "소득",
-        reporterName: "홍길동 과장",
-        title: "농촌소득 정책 현안 보고",
-        phoneNumber: "",
-        status: "REPORTING"
-      },
-      {
-        id: timeOffset + 1000,
-        department: "보험",
-        reporterName: "이순신 사무관",
-        title: "농업재해보험 제도 개선 보고",
-        phoneNumber: "",
-        status: "WAITING"
-      },
-      {
-        id: timeOffset + 2000,
-        department: "에너지",
-        reporterName: "유관순 주무관",
-        title: "영농형 태양광 하위법령 검토 보고",
-        phoneNumber: "",
-        status: "WAITING"
-      },
-      {
-        id: timeOffset + 3000,
-        department: "재해",
-        reporterName: "강감찬 사무관",
-        title: "집중호우 대응 점검 보고",
-        phoneNumber: "",
-        status: "WAITING"
-      }
-    ];
+  const bookings = localState.bookings || [];
+  const waiting = bookings.filter(b => b.status === "WAITING").length;
+  waitingEl.innerText = `${waiting}팀`;
 
-    freshState.bookings = [...freshState.bookings, ...demoItems];
-    return freshState;
-  }, { requireAdmin: true });
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const durations = bookings
+    .filter(b => b.status === "COMPLETED" && b.calledAt && b.completedAt && b.completedAt >= startOfToday.getTime() && b.completedAt > b.calledAt)
+    .map(b => b.completedAt - b.calledAt);
+  document.getElementById('sumAvg').innerText = durations.length
+    ? `${Math.round(durations.reduce((a, c) => a + c, 0) / durations.length / 60000)}분`
+    : '-';
 
-  if (success) alert("테스트용 대기열이 생성되었습니다.");
+  const active = bookings.find(b => b.status === "REPORTING");
+  document.getElementById('sumElapsed').innerText = active && active.calledAt
+    ? `${Math.floor((Date.now() - active.calledAt) / 60000)}분`
+    : '-';
 }
 
 function renderDirectorStatusUI() {
   const ds = localState.directorStatus || { available: true };
+  const adminAwayBtn = document.getElementById('adminAwayBtn');
+  if (adminAwayBtn) adminAwayBtn.innerText = ds.available === false ? '복귀 처리' : '부재중 설정';
   const dot = document.getElementById('directorStatusDot');
   const text = document.getElementById('directorStatusText');
   const card = document.getElementById('directorStatusCard');
@@ -2613,49 +2559,6 @@ function renderAdminStatus() {
   el.innerText = localState.adminFcmToken
     ? "✓ 이 시스템에 관리자 알림 기기가 등록되어 있습니다."
     : "아직 등록된 관리자 알림 기기가 없습니다.";
-}
-
-function renderDeputyStatus() {
-  const el = document.getElementById('deputyStatusText');
-  if (!el) return;
-  el.innerText = localState.deputyFcmToken
-    ? "✓ 이 시스템에 대리 수신자가 등록되어 있습니다."
-    : "아직 등록된 대리 수신자가 없습니다.";
-}
-
-function renderAwayLog() {
-  const container = document.getElementById('awayLogContainer');
-  if (!container) return;
-  const log = localState.unavailabilityLog || [];
-
-  if (log.length === 0) {
-    container.innerHTML = '<div class="text-[11px] text-gray-600 py-2 text-center">부재중 이력이 없습니다.</div>';
-    return;
-  }
-
-  container.innerHTML = '';
-  log.forEach(entry => {
-    const sinceText = entry.since ? new Date(entry.since).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "-";
-    const untilText = entry.until ? new Date(entry.until).toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : "-";
-    const html = `
-      <div class="p-2 border border-gray-800/60 bg-slate-950/30 rounded-lg text-[11px]">
-        <div class="flex items-center justify-between">
-          <span class="font-bold text-amber-300">${escapeHtml(entry.reason || '-')}</span>
-          <span class="text-gray-500">${sinceText} ~ ${untilText}</span>
-        </div>
-        ${entry.memo ? `<p class="text-gray-500 mt-0.5">${escapeHtml(entry.memo)}</p>` : ''}
-      </div>
-    `;
-    container.insertAdjacentHTML('beforeend', html);
-  });
-}
-
-function toggleAwayLogSection() {
-  const box = document.getElementById('awayLogContainer');
-  const arrow = document.getElementById('awayLogArrow');
-  isAwayLogExpanded = !isAwayLogExpanded;
-  box.classList.toggle('hidden', !isAwayLogExpanded);
-  arrow.classList.toggle('rotate-180', isAwayLogExpanded);
 }
 
 function openDirectorStatusModal() {
@@ -2812,28 +2715,6 @@ async function registerThisDeviceAsAdmin() {
   if (success) {
     localStorage.setItem("fcm_linked_token", token);
     alert("이 기기가 관리자 알림 수신기기로 등록되었습니다.\n앞으로 신규 등록이 있을 때마다 이 기기로 알림이 전달됩니다.");
-  }
-}
-
-async function registerThisDeviceAsDeputy() {
-  const granted = await ensureNotificationPermission();
-  if (granted && window.initPushNotifications) {
-    await window.initPushNotifications();
-  }
-  const token = window.getStoredFcmToken ? await window.getStoredFcmToken() : "";
-  if (!token) {
-    alert("이 브라우저에서 알림 권한이 허용되지 않아 등록할 수 없습니다.\n브라우저 주소창의 자물쇠 아이콘에서 알림을 허용해 주세요.");
-    return;
-  }
-
-  const success = await mutateState((freshState) => {
-    ensureDirectorStatusDefaults(freshState);
-    freshState.deputyFcmToken = token;
-    return freshState;
-  }, { requireAdmin: true });
-
-  if (success) {
-    alert("이 기기가 대리 수신자로 등록되었습니다.\n국장님 부재중 전환 시 이 기기로 알림이 전달됩니다.");
   }
 }
 
