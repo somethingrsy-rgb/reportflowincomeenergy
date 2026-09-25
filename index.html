@@ -718,6 +718,16 @@ body.light-mode #completedCard button > span > span {
 }
 </style>
 <style id="light-mode-header-subtitle-removal">body.light-mode #headerSubtitle { display: none !important; } #sharedHeaderSubtitle { display: none; } body.light-mode #sharedHeaderSubtitle { display: block; }</style>
+<style id="light-mode-urgent-request-palette">
+body.light-mode .queue-item-pending { background: #F5F1FC !important; border-color: #D4C6F4 !important; }
+body.light-mode .pending-badge { background: #EAE2FA !important; color: #7955B5 !important; box-shadow: none !important; }
+body.light-mode #queueList .urgent-request-panel { background: #F0EBFA !important; border-color: #DDD1F2 !important; }
+body.light-mode #queueList .urgent-request-title,
+body.light-mode #queueList .urgent-request-title span { color: #7955B5 !important; }
+body.light-mode #queueList .urgent-request-reason { color: #77718F !important; }
+body.light-mode .urgent-request-panel button:first-child { background: #8BD0C8 !important; color: #FFFFFF !important; }
+body.light-mode .urgent-request-panel button:last-child { background: #E8E1F4 !important; color: #7955B5 !important; }
+</style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased light-mode">
@@ -1622,7 +1632,7 @@ function renderUI() {
 
       // 관리자 전용: 긴급 "요청" 검토 카드 (승인/거절)
       const adminUrgentRequestPanel = (isAdminMode && !isDirectorMode && !item.isUrgent && item.urgentRequested)
-        ? `<div class=\"mt-1.5 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg\">
+        ? `<div class=\"urgent-request-panel mt-1.5 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg\">
              <p class=\"urgent-request-title text-[10px] font-bold\">⏳ 긴급 처리 요청 대기중${item.urgentRequestedBySelf ? ' <span class=\"text-rose-400\">[본인 신청]</span>' : ''}</p>
              <p class=\"urgent-request-reason text-[10px] mt-0.5\">${escapeHtml(item.urgentReason || '')}</p>
              <div class=\"flex gap-1.5 mt-1.5\">
@@ -2442,6 +2452,23 @@ function closeUrgentRequestModal() {
   document.getElementById('urgentRequestModal').classList.add('hidden');
 }
 
+async function notifyAdminOfUrgentRequest(bookingId) {
+  try {
+    const response = await fetch("/.netlify/functions/notify-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "urgent-request", bookingId })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.sent) {
+      showPushNotice("긴급 요청은 접수됐지만 관리자 알림을 전달하지 못했습니다. 관리자 알림 수신기기 등록 상태를 확인해 주세요.");
+    }
+  } catch (error) {
+    console.error("Urgent admin notification failed", error);
+    showPushNotice("긴급 요청은 접수됐지만 관리자 알림 전송에 실패했습니다.");
+  }
+}
+
 async function submitUrgentRequest() {
   const reason = document.getElementById('urgentReasonInput').value.trim();
   if (!reason) {
@@ -2468,6 +2495,7 @@ async function submitUrgentRequest() {
 
   if (success) {
     closeUrgentRequestModal();
+    await notifyAdminOfUrgentRequest(myId);
     alert('긴급 처리 요청이 접수되었습니다.\n관리자 승인 후 대기열 맨 앞으로 이동합니다.');
     playChime();
     updateMyBookingUI();
