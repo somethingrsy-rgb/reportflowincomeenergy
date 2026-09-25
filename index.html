@@ -566,7 +566,80 @@ body.light-mode #adminCard #adminAwayBtn:hover {
   #headerControls > button, #headerControls > a { padding:7px 5px; font-size:11px; }
   #headerControls #connectionStatus { padding:6px 5px; font-size:10px; }
 }
-</style></head>
+</style><style id="light-mode-reference-update">
+/* Reference palette and flat surfaces: light mode only. */
+body.light-mode { background: #F5F3FA; color: #25213F; }
+body.light-mode *, body.light-mode *::before, body.light-mode *::after,
+body.light-mode #adminCard, body.light-mode #directorStatusCard,
+body.light-mode .queue-item-me {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  --tw-drop-shadow: drop-shadow(0 0 0 transparent) !important;
+}
+body.light-mode :focus-visible { outline: 2px solid #9476E8 !important; outline-offset: 3px; }
+body.light-mode .animate-ping { display: none !important; }
+body.light-mode header { background: #FCFBFF !important; border-color: #E5DEF9 !important; }
+body.light-mode footer { border-color: #E5DEF9 !important; }
+body.light-mode .text-white, body.light-mode .text-slate-200 { color: #25213F !important; }
+body.light-mode .text-gray-300, body.light-mode .text-gray-400,
+body.light-mode .text-gray-500, body.light-mode .text-gray-600 { color: #77718F !important; }
+body.light-mode .light-card, body.light-mode .queue-item-normal {
+  background: #FFFFFF !important; border-color: #E5DEF9 !important;
+}
+/* Image 1: lavender-to-mint reporting panel with white typography. */
+body.light-mode #activeReportingCard {
+  background: linear-gradient(135deg, #A58FEF 0%, #9CAFD5 52%, #8DCEC6 100%) !important;
+  border-color: #C8BDED !important;
+}
+body.light-mode #activeReportingCard h2,
+body.light-mode #activeReportingCard #lastUpdatedTime,
+body.light-mode #activeReportingCard #activeName,
+body.light-mode #activeReportingCard #activeTitle { color: #FFFFFF !important; }
+body.light-mode #activeReportingCard #activeDept {
+  background: rgba(255,255,255,0.14) !important;
+  border-color: rgba(255,255,255,0.25) !important; color: #FFFFFF !important;
+}
+body.light-mode #activeReportingCard > div:first-child .relative.rounded-full { background: #FFFFFF !important; }
+/* Image 2: header controls and personal reservation in lavender. */
+body.light-mode header .always-white-text,
+body.light-mode #headerControls #directorModeBtn {
+  background: linear-gradient(135deg, #A781F2, #8BCFC7) !important; color: #FFFFFF !important;
+}
+body.light-mode #headerControls > button, body.light-mode #headerControls > a {
+  background: #F7F3FF !important; color: #803BF0 !important;
+  border-color: #D5C8FF !important; border-radius: 9999px;
+}
+body.light-mode #connectionStatus { background: #F7F3FF !important; color: #8775BB !important; border: 1px solid #E2D9FB; }
+body.light-mode #myBookingCard { background: #FFFFFF !important; border-color: #D5C8FF !important; }
+body.light-mode #myBookingCard .text-white,
+body.light-mode #myBookingDept { color: #292344 !important; }
+body.light-mode #myBookingCard > div:first-child > span,
+body.light-mode #myBookingCard .text-emerald-400 { color: #77718F !important; }
+body.light-mode #myBookingCard .bg-emerald-500\/10 {
+  background: #F4F0FD !important; border-color: #E6DFFE !important;
+}
+body.light-mode #myBookingCard #myBookingStatusText { color: #803BF0 !important; }
+body.light-mode #myBookingCard #myBookingBadge {
+  background: #EAE2FC !important; color: #803BF0 !important; flex-shrink: 0;
+}
+body.light-mode #myBookingCard .btn-cancel-booking {
+  background: #F7F3FF !important; color: #803BF0 !important; border-color: #D0BFFF !important;
+}
+body.light-mode #myBookingCard .btn-cancel-booking:hover { background: #EEE7FC !important; }
+/* Image 3: solid mint circles for every queue rank, including own/urgent. */
+body.light-mode #queueList .h-8.w-8 {
+  width: 2rem; height: 2rem; aspect-ratio: 1; border-radius: 50% !important;
+  background: #8BD0C8 !important; color: #FFFFFF !important;
+}
+body.light-mode .queue-item-me { background: #EEEFF8 !important; border-color: #A68AFF !important; }
+body.light-mode #queueList .queue-item-me span.bg-emerald-500\/10 {
+  background: #A78BF4 !important; color: #FFFFFF !important;
+}
+/* Image 4: remove the adjacent team count in light mode; preserve dark mode. */
+body.light-mode #waitingCountBadge { display: none !important; }
+body.light-mode .always-white-text, body.light-mode .always-white-text * { color: #FFFFFF !important; }
+</style>
+</head>
 
 <body class="min-h-screen flex flex-col antialiased light-mode">
 <script>
