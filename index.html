@@ -1256,6 +1256,7 @@ async function fetchState() {
     try {
       renderUI();
       checkMyStatusTriggers();
+      checkAdminUrgentRequests();
       const pushToken = localStorage.getItem('fcm_token');
       if ('Notification' in window && Notification.permission === 'granted' && pushToken &&
           Date.now() - lastPushSyncAttempt > 30000) {
@@ -1381,8 +1382,12 @@ async function mutateState(mutateFn, options = {}) {
         throw new Error("서버 상태 저장 실패");
       }
 
-      localState = nextState;
+      const saved = await writeResponse.json();
+      localState = saved.state || nextState;
       renderUI();
+      if ((saved.urgentNotifications || []).some(item => !item.sent)) {
+        showPushNotice("긴급 요청은 접수됐지만 관리자 푸시가 전달되지 않았습니다. 관리자 알림 수신기기 등록 상태를 확인해 주세요.");
+      }
       return true;
     } catch (error) {
       console.error("Mutation failed:", error);
@@ -1868,6 +1873,43 @@ function updateMyBookingUI() {
         }
       }, 10000);
       completedBookingCleanup = cleanup;
+    }
+  }
+}
+
+const seenAdminUrgentRequests = new Set();
+function showAdminUrgentAlert(key, message) {
+  if (seenAdminUrgentRequests.has(key)) return;
+  seenAdminUrgentRequests.add(key);
+  let box = document.getElementById('adminUrgentAlert');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'adminUrgentAlert';
+    box.setAttribute('role', 'alert');
+    box.style.cssText = 'margin:12px auto;padding:16px;max-width:1200px;border:1px solid #8BD0C8;border-radius:8px;background:#E9F5F4;color:#365F5B;font-weight:700';
+    const text = document.createElement('span');
+    const close = document.createElement('button');
+    close.textContent = '확인';
+    close.style.cssText = 'margin-left:16px;padding:4px 12px;border:1px solid currentColor;border-radius:6px';
+    close.onclick = () => { box.hidden = true; };
+    box.append(text, close);
+    document.getElementById('pushNotice').after(box);
+  }
+  box.firstElementChild.textContent = '🚨 긴급 처리 요청 · ' + message;
+  box.hidden = false;
+  playChime();
+  sendBrowserNotification('국장실 보고대기 - 긴급 처리 요청', message);
+}
+function checkAdminUrgentRequests() {
+  if (!isAdminMode) {
+    const box = document.getElementById('adminUrgentAlert');
+    if (box) box.hidden = true;
+    return;
+  }
+  for (const b of localState.bookings) {
+    if (b.status === 'WAITING' && b.urgentRequested && !b.isUrgent) {
+      showAdminUrgentAlert(b.id + ':' + (b.urgentRequestedAt || 0),
+        (b.department || '') + ' ' + (b.reporterName || '') + '님이 긴급 처리를 요청했습니다. 관리자 화면에서 확인해 주세요.');
     }
   }
 }
@@ -2471,23 +2513,6 @@ function closeUrgentRequestModal() {
   document.getElementById('urgentRequestModal').classList.add('hidden');
 }
 
-async function notifyAdminOfUrgentRequest(bookingId) {
-  try {
-    const response = await fetch("/.netlify/functions/notify-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "urgent-request", bookingId })
-    });
-    const result = await response.json();
-    if (!response.ok || !result.sent) {
-      showPushNotice("긴급 요청은 접수됐지만 관리자 알림을 전달하지 못했습니다. 관리자 알림 수신기기 등록 상태를 확인해 주세요.");
-    }
-  } catch (error) {
-    console.error("Urgent admin notification failed", error);
-    showPushNotice("긴급 요청은 접수됐지만 관리자 알림 전송에 실패했습니다.");
-  }
-}
-
 async function submitUrgentRequest() {
   const reason = document.getElementById('urgentReasonInput').value.trim();
   if (!reason) {
@@ -2514,7 +2539,6 @@ async function submitUrgentRequest() {
 
   if (success) {
     closeUrgentRequestModal();
-    await notifyAdminOfUrgentRequest(myId);
     alert('긴급 처리 요청이 접수되었습니다.\n관리자 승인 후 대기열 맨 앞으로 이동합니다.');
     playChime();
     updateMyBookingUI();
@@ -3136,6 +3160,10 @@ window.getStoredFcmToken = async function getStoredFcmToken() {
 if (await isSupported()) {
   messaging = getMessaging(app);
   onMessage(messaging, (payload) => {
+    if (payload?.data?.type === "urgent-request") {
+      showAdminUrgentAlert(payload.data.requestKey, payload.data.body || "긴급 요청을 확인해 주세요.");
+      return;
+    }
     const title = payload?.notification?.title || payload?.data?.title || "국장실 보고대기";
     const body = payload?.notification?.body || payload?.data?.body || "새 알림이 도착했습니다.";
     sendBrowserNotification(title, body);
