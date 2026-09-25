@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko" class="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0B0F19">
-<title>보고 등록 통계</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { darkMode: 'class' };</script>
-<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3f9"><title>보고 통계</title><script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script><style>
   body { background:#0B0F19; color:#fff; font-family: -apple-system, sans-serif; }
   .stat-card { background:#161B29; border-radius:8px; padding:1rem; }
   .insight-box { background:linear-gradient(135deg,#3C3489 0%,#534AB7 100%); border-radius:12px; padding:1.25rem 1.5rem; }
@@ -37,11 +24,8 @@
     border:none; background:#3C3489; color:#fff; font-weight:600; cursor:pointer;
   }
   #pinError { color:#F87171; font-size:13px; margin-top:0.6rem; display:none; }
-</style>
-</head>
-<body>
 
-<div id="pinOverlay">
+body{margin:0;background:#f4f3f9;color:#202b45}#pinOverlay{background:#f4f3f9}#pinBox{background:#fff;border-color:#dce0eb;color:#202b45}#pinBox input{background:#f4f3f9;color:#202b45;border-color:#dce0eb}#report-demo{max-width:1120px;margin:auto}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #645bc0;outline-offset:3px}</style></head><body><div id="pinOverlay">
   <div id="pinBox">
     <div style="font-weight:600; font-size:16px; margin-bottom:4px;">관리자 PIN 확인</div>
     <div style="font-size:13px; color:#888;">통계 화면은 관리자만 볼 수 있습니다.</div>
@@ -54,83 +38,98 @@
   </div>
 </div>
 
-<div id="statsContent" class="hidden">
-<div style="max-width:960px;margin:0 auto;padding:1.5rem;">
+<div id="statsContent" class="hidden"><div id="report-demo" aria-label="보고 통계">
+<style>
+#report-demo{--bg:#f4f3f9;--panel:#ffffff;--ink:#202b45;--sub:#59657d;--line:#dce0eb;--purple:#9589ed;--green:#47c8ae;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:24px;border-radius:14px;color-scheme:light}
+#report-demo *{box-sizing:border-box}#report-demo h2{font-size:22px;margin:0;font-weight:600}#report-demo h3{font-size:15px;margin:0 0 16px;font-weight:600}#report-demo p{margin:6px 0}#report-demo .rd-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}#report-demo .rd-between{justify-content:space-between}#report-demo .rd-sub{color:var(--sub);font-size:12px}#report-demo button,#report-demo input,#report-demo select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0;max-width:100%}#report-demo button{cursor:pointer}#report-demo button[aria-pressed=true],#report-demo .rd-main{background:#645bc0;color:#fff;border-color:#645bc0}#report-demo label{display:flex;gap:7px;align-items:center;flex-wrap:wrap}#report-demo .rd-toolbar{margin:20px 0 12px}#report-demo .rd-note{padding:12px 14px;background:var(--panel);border-left:3px solid var(--purple);border-radius:4px;margin:12px 0 20px}#report-demo .rd-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}#report-demo .rd-metric,#report-demo .rd-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}#report-demo .rd-value{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;margin:5px 0}#report-demo .rd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}#report-demo .rd-daily{display:flex;gap:4px;align-items:end;height:176px;padding-top:24px}#report-demo .rd-day{flex:1;min-width:0;text-align:center;display:flex;flex-direction:column;justify-content:end;height:100%;font-size:11px}#report-demo .rd-pair{height:132px;display:flex;align-items:end;justify-content:center;gap:3px}#report-demo .rd-bar{width:35%;max-width:22px;background:var(--purple);border-radius:3px 3px 0 0;min-height:0}#report-demo .rd-bar.done{background:var(--green)}#report-demo .rd-cat{display:grid;grid-template-columns:52px 1fr 100px;gap:10px;align-items:center;margin:16px 0}#report-demo .rd-track{height:10px;background:var(--bg);border-radius:8px}#report-demo .rd-fill{height:100%;background:var(--purple);border-radius:8px}#report-demo .rd-cat span:last-child{text-align:right;font-variant-numeric:tabular-nums;font-size:12px}#report-demo .rd-scroll{overflow-x:auto}#report-demo table{width:100%;border-collapse:collapse;font-size:13px}#report-demo th,#report-demo td{padding:11px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}#report-demo th{color:var(--sub);font-weight:500}#report-demo td.rd-title{white-space:normal;min-width:150px}#report-demo .rd-badge{font-size:12px;color:var(--sub);border:1px solid var(--line);border-radius:20px;padding:3px 9px}#report-demo details{margin-top:16px}#report-demo summary{cursor:pointer;padding:8px 0}#report-demo .rd-form{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:12px 0}#report-demo .rd-form label{display:block}#report-demo .rd-form input,#report-demo .rd-form select{width:100%;margin-top:5px}#report-demo [hidden]{display:none!important}#report-demo .rd-key{display:inline-block;width:8px;height:8px;background:var(--purple);border-radius:2px;margin-right:5px}#report-demo .rd-key.done{background:var(--green)}#report-demo .rd-empty{padding:22px;text-align:center;color:var(--sub)}#report-demo .rd-status{min-height:22px;color:var(--sub)}
+@media(max-width:650px){#report-demo{padding:14px}#report-demo .rd-metrics{grid-template-columns:1fr 1fr}#report-demo .rd-grid{grid-template-columns:1fr}#report-demo .rd-form{grid-template-columns:1fr}#report-demo .rd-value{font-size:24px}#report-demo .rd-cat{grid-template-columns:44px 1fr 90px}#report-demo input{font-size:16px}#report-demo button{min-height:42px}}
+#report-demo .rd-time-line{display:block;white-space:nowrap}</style>
+<p><a href="./index.html" style="color:#645bc0">← 보고 대기 현황으로 돌아가기</a></p><p id="connectionNotice" role="status" class="rd-sub">데이터를 불러오는 중입니다.</p><header class="rd-row rd-between"><div><div class="rd-sub">REPORT FLOW · 관리자</div><h2>보고 통계</h2></div><span class="rd-badge">한국시간 기준</span></header>
+<div class="rd-row rd-between rd-toolbar"><div class="rd-row" id="rd-period"><button data-period="today">오늘</button><button data-period="week" aria-pressed="true">최근 7일</button><button data-period="month">이번 달</button><button data-period="custom">직접 선택</button></div><button id="rd-export">엑셀 내보내기</button></div>
+<div id="rd-dates" class="rd-row" hidden><label>시작일 <input id="rd-start" type="date" value="2026-09-19"></label><label>종료일 <input id="rd-end" type="date" value="2026-09-25"></label></div>
+<p id="rd-range" class="rd-sub"></p><div id="rd-error" role="alert"></div>
 
-  <div style="margin-bottom:1rem;">
-    <a href="./index.html" class="back-link">&larr; 보고 대기 현황으로 돌아가기</a>
-  </div>
+<div class="rd-metrics" id="rd-metrics" aria-live="polite"></div>
+<div class="rd-panel"><div class="rd-row rd-between"><h3>일별 등록·완료 추이</h3><div class="rd-sub"><span class="rd-key"></span>등록 <span class="rd-key done"></span>완료 · 단위: 건</div></div><div id="rd-daily" class="rd-daily" role="img"></div></div>
+<div class="rd-grid"><section class="rd-panel"><h3>분야별 등록 건수</h3><div id="rd-categories"></div></section><section class="rd-panel"><h3>분야별 평균 보고시간</h3><div id="rd-times"></div><label class="rd-sub"><input type="checkbox" id="rd-long">1시간 이상 포함</label><p id="rd-time-note" class="rd-sub"></p><p class="rd-sub">* 표본 부족</p></section></div>
+<section class="rd-panel"><h3>기간 분석</h3><div id="rd-insight"></div><p class="rd-sub">평균 보고시간은 호출부터 완료까지입니다. 완료 3건 미만인 분야에는 ‘표본 부족’을 표시합니다.</p></section>
+<details class="rd-panel" style="margin-top:16px" id="rd-detail-panel"><summary id="rd-list-title">보고 상세 내역</summary><div class="rd-row rd-between"><div class="rd-row"><label><span class="rd-sub">분야</span><select id="rd-category"><option value="">전체</option><option>소득</option><option>보험</option><option>에너지</option><option>재해</option><option>탄소</option></select></label><input id="rd-search" placeholder="제목·보고자 검색" aria-label="제목 또는 보고자 검색"></div></div><p class="rd-sub">검색·분야 선택은 아래 목록에 적용됩니다. 상단 통계는 선택 기간 전체 기준입니다.</p><div class="rd-scroll"><table><thead><tr><th>등록일</th><th>분야</th><th>보고자</th><th>대표 핵심 제목</th><th>상태</th><th>보고시간</th></tr></thead><tbody id="rd-rows"></tbody></table></div><div class="rd-row rd-between" style="margin-top:12px"><span id="rd-count" class="rd-sub"></span><div class="rd-row"><button id="rd-prev">이전</button><button id="rd-next">다음</button></div></div></details>
 
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-    <div style="font-size:18px;font-weight:600;">보고 등록 통계</div>
-    <button id="exportBtn" style="display:flex;align-items:center;gap:6px;background:#3C3489;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;">
-      엑셀로 내보내기
-    </button>
-  </div>
+<div id="rd-export-status" class="rd-status" aria-live="polite"></div>
 
-  <div id="connectionNotice" style="display:none;font-size:13px;color:#F87171;margin-bottom:1rem;"></div>
-
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.75rem;">
-    <div class="stat-card"><div style="font-size:13px;color:#888;">이번 달 누적 등록</div><div id="monthlyTotal" style="font-size:24px;font-weight:600;">-</div></div>
-    <div class="stat-card"><div style="font-size:13px;color:#888;">오늘 등록</div><div id="todayTotal" style="font-size:24px;font-weight:600;">-</div></div>
-    <div class="stat-card"><div style="font-size:13px;color:#888;">평균 처리시간</div><div id="avgProcessing" style="font-size:24px;font-weight:600;">-</div></div>
-    <div class="stat-card"><div style="font-size:13px;color:#888;">최다 분야</div><div id="topCategory" style="font-size:24px;font-weight:600;">-</div></div>
-  </div>
-
-  <p style="font-size:13px;color:#aaa;margin-bottom:1rem;">처리시간 통계는 1시간 미만인 완료 보고만 반영합니다. 1시간 이상 기록은 제외하며, 등록 건수는 유지합니다.</p>
-
-  <div style="font-size:14px;color:#888;margin-bottom:8px;">일별 등록 추이 (최근 14일)</div>
-  <div style="position:relative;width:100%;height:200px;margin-bottom:2rem;">
-    <canvas id="dailyChart"></canvas>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:1.75rem;">
-    <div>
-      <div style="font-size:14px;color:#888;margin-bottom:8px;">분야별 비중</div>
-      <div id="categoryLegend" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:10px;font-size:12px;color:#888;"></div>
-      <div style="position:relative;width:160px;height:160px;margin:0 auto;">
-        <canvas id="catChart"></canvas>
-        <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-          <div id="totalCategoryCount" style="font-size:20px;font-weight:600;">0</div>
-          <div style="font-size:11px;color:#888;">건</div>
-        </div>
-      </div>
-    </div>
-    <div>
-      <div style="font-size:14px;color:#888;margin-bottom:8px;">분야별 처리 소요시간</div>
-      <div style="position:relative;width:100%;height:220px;">
-        <canvas id="deptChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="insight-box">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <span style="font-weight:600;color:#EEEDFE;font-size:13px;">이번 주 인사이트</span>
-    </div>
-    <div id="insightText" style="font-size:15px;color:#fff;line-height:1.7;margin-bottom:12px;"></div>
-    <div style="display:flex;gap:20px;padding-top:12px;border-top:0.5px solid rgba(255,255,255,0.15);">
-      <div><div style="font-size:11px;color:#CECBF6;">전주 대비</div><div id="weekOverWeekVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
-      <div><div style="font-size:11px;color:#CECBF6;">병목 분야</div><div id="bottleneckVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
-      <div><div style="font-size:11px;color:#CECBF6;">집중 분야</div><div id="focusVal" style="font-size:18px;font-weight:600;color:#fff;">-</div></div>
-    </div>
-  </div>
-
-</div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
-const CATEGORY_COLORS = {
-  에너지: { from: "#9B93EB", to: "#6D63CC", solid: "#7F77DD" },
-  소득:   { from: "#79D9B8", to: "#3FAF8B", solid: "#5DCAA5" },
-  보험:   { from: "#F4B194", to: "#DD7C5A", solid: "#F0997B" },
-  재해:   { from: "#F2A8C2", to: "#DE6B92", solid: "#ED93B1" },
-  탄소:   { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" },
-};
-const DEFAULT_COLOR = { from: "#C9C7BD", to: "#9B998F", solid: "#B4B2A9" };
+function kstDate(value){const n=Number(value);if(!Number.isFinite(n)||n<=0)return null;return new Date(n+9*3600000).toISOString().slice(0,10);}
+function normalizeHistory(entries){
+ const groups=new Map();
+ entries.filter(h=>h&&(h.type==='등록'||h.type==='완료')).forEach((h,i)=>{
+  const key=h.bookingId?String(h.bookingId):'legacy-'+i;
+  if(!groups.has(key))groups.set(key,[]);groups.get(key).push(h);
+ });
+ return [...groups].map(([id,events])=>{
+  events.sort((a,b)=>(Number(a.createdAt)||0)-(Number(b.createdAt)||0));
+  const reg=events.find(h=>h.type==='등록'),done=events.filter(h=>h.type==='완료').at(-1),last=events.at(-1);
+  const day=h=>h?(kstDate(h.createdAt)||(/^\d{4}-\d{2}-\d{2}$/.test(h.date||'')?h.date:null)):null;
+  const test=events.find(h=>String(h.title||'').includes('테스트'));
+  const duration=done&&Number.isFinite(done.processingTimeMs)&&done.processingTimeMs>0?done.processingTimeMs/60000:null;
+  return {id,date:day(reg),completedDate:day(done),category:String(last.category||reg?.category||'기타'),reporter:String(last.reporter||reg?.reporter||''),title:String(test?.title||last.title||reg?.title||''),minutes:duration};
+ });
+}
 
-// index.html과 동일한 Firebase 설정 (읽기 전용으로만 사용)
-const firebaseConfig = {
+(()=>{
+const root=document.getElementById('report-demo'),$=s=>root.querySelector(s),DAY=86400000,TODAY=kstDate(Date.now()),cats=['소득','보험','에너지','재해','탄소'];
+const shift=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*DAY).toISOString().slice(0,10);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let base=[];
+let added=[],state={period:'week',start:shift(TODAY,-6),end:TODAY,long:false,tests:false,query:'',category:'',page:0};
+const categoryColors={'에너지':'#9589ed','소득':'#52bd9a','보험':'#eea076','재해':'#df83ac','탄소':'#7aaed5'};
+const isTest=r=>r.title.includes('테스트'),between=(date,a,b)=>!!date&&date>=a&&date<=b;
+function range(){if(state.period==='today')return[TODAY,TODAY];if(state.period==='week')return[shift(TODAY,-6),TODAY];if(state.period==='month')return[TODAY.slice(0,7)+'-01',TODAY];return[state.start,state.end];}
+function save(){}
+function calculate(){const [a,b]=range(),all=[...base,...added],good=all.filter(r=>!isTest(r)),reg=good.filter(r=>between(r.date,a,b)),complete=good.filter(r=>between(r.completedDate,a,b)),valid=complete.filter(r=>r.minutes>0&&(state.long||r.minutes<60));return{a,b,all,good,reg,complete,valid};}
+let current,visible=[];
+function render(){const c=calculate();current=c;const{a,b,all,good,reg,complete,valid}=c;$('#rd-dates').hidden=state.period!=='custom';$('#rd-start').value=state.start;$('#rd-end').value=state.end;$('#rd-category').value=state.category;$('#rd-search').value=state.query;$('#rd-long').checked=state.long;
+root.querySelectorAll('[data-period]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.period===state.period)));
+const validRange=a&&b&&a<=b;$('#rd-error').textContent=validRange?'':'시작일과 종료일을 확인해 주세요.';if(!validRange)return;
+const days=Math.round((Date.parse(b)-Date.parse(a))/DAY)+1,prevEnd=shift(a,-1),prevStart=shift(a,-days),previous=good.filter(r=>between(r.date,prevStart,prevEnd)).length;
+const delta=previous?`${Math.round((reg.length-previous)/previous*100)>0?'+':''}${Math.round((reg.length-previous)/previous*100)}%`:(reg.length?'비교 불가 · 이전 0건':'비교할 등록 없음');
+$('#rd-range').textContent=`${a} ~ ${b} · 한국시간 · 직전 비교 ${prevStart} ~ ${prevEnd}`;
+const total=valid.reduce((s,r)=>s+r.minutes,0),avg=valid.length?Math.round(total/valid.length):null;
+$('#rd-metrics').innerHTML=[['등록 건수',reg.length+'건','직전 기간 대비 '+delta],['완료 건수',complete.length+'건','완료일 기준'],['평균 보고시간',avg===null?'자료 없음':avg+'분',`집계 ${valid.length}건`],['총 보고시간',valid.length?`<span class="rd-time-line">${Math.floor(Math.round(total)/60)}시간</span><span class="rd-time-line">${Math.round(total)%60}분</span>`:'자료 없음','평균과 동일한 집계 기준']].map(([l,v,n])=>`<div class="rd-metric"><div class="rd-sub">${l}</div><div class="rd-value">${v}</div><div class="rd-sub">${n}</div></div>`).join('');
+const bucket=days>31?Math.ceil(days/24):1,points=[];for(let i=0;i<days;i+=bucket){const start=shift(a,i),end=shift(a,Math.min(i+bucket-1,days-1));points.push({date:start,end,r:reg.filter(r=>between(r.date,start,end)).length,c:complete.filter(r=>between(r.completedDate,start,end)).length});}
+const max=Math.max(1,...points.flatMap(p=>[p.r,p.c]));$('#rd-daily').innerHTML=points.map((p,i)=>`<div class="rd-day"><div class="rd-pair" title="${p.date}${bucket>1?' ~ '+p.end:''}: 등록 ${p.r}건, 완료 ${p.c}건"><div class="rd-bar" style="height:${p.r/max*100}%"></div><div class="rd-bar done" style="height:${p.c/max*100}%"></div></div><span>${i%Math.max(1,Math.ceil(points.length/7))===0?p.date.slice(5).replace('-','/'):'·'}</span></div>`).join('');$('#rd-daily').setAttribute('aria-label',`등록 ${reg.length}건, 완료 ${complete.length}건. ${bucket>1?bucket+'일 묶음':'일별'} 추이`);
+const displayCats=[...cats,...new Set(good.map(r=>r.category).filter(c=>!cats.includes(c)))];const categories=displayCats.map(cat=>({cat,n:reg.filter(r=>r.category===cat).length,items:valid.filter(r=>r.category===cat)}));$('#rd-categories').innerHTML=reg.length?categories.map(x=>`<div class="rd-cat"><span>${esc(x.cat)}</span><div class="rd-track"><div class="rd-fill" style="background:${categoryColors[x.cat]||"#8995aa"};width:${x.n/Math.max(...categories.map(y=>y.n))*100}%"></div></div><span>${x.n}건 · ${Math.round(x.n/reg.length*100)}%</span></div>`).join(''):'<div class="rd-empty">등록 0건 · 자료 없음</div>';
+const times=categories.filter(x=>x.items.length).map(x=>({...x,avg:x.items.reduce((s,r)=>s+r.minutes,0)/x.items.length}));$('#rd-times').innerHTML=times.length?categories.map(row=>{const x=times.find(t=>t.cat===row.cat);return x?`<div class="rd-cat"><span>${esc(x.cat)}</span><div class="rd-track"><div class="rd-fill" style="background:${categoryColors[x.cat]||"#8995aa"};width:${x.avg/Math.max(...times.map(y=>y.avg))*100}%"></div></div><span>${Math.round(x.avg)}분 · ${x.items.length}건${x.items.length<3?' *':''}</span></div>`:`<div class="rd-cat"><span>${esc(row.cat)}</span><div class="rd-track"></div><span>자료 없음</span></div>`;}).join(''):'<div class="rd-empty">완료 보고시간 자료 없음</div>';
+$('#rd-time-note').textContent=`장시간 기록 ${complete.filter(r=>r.minutes>=60).length}건 · 확인 필요 · 평균·총 보고시간 ${state.long?"포함":"제외"}`;
+const topCategory=[...categories].sort((x,y)=>y.n-x.n)[0],topTime=[...times].sort((x,y)=>y.avg-x.avg)[0];
+$('#rd-insight').textContent=(reg.length?`${topCategory.cat} 분야의 등록이 ${topCategory.n}건으로 가장 많습니다. `:'선택 기간의 등록이 없습니다. ')+(times.length?`${topTime.cat} 분야의 평균 보고시간이 ${Math.round(topTime.avg)}분으로 가장 깁니다${topTime.items.length<3?' (표본 부족)':''}.`:'보고시간을 분석할 완료 기록이 없습니다.');
+visible=good.filter(r=>between(r.date,a,b)||between(r.completedDate,a,b)).filter(r=>(!state.category||r.category===state.category)&&(!state.query||(r.title+' '+r.reporter).includes(state.query))).sort((x,y)=>(y.date||y.completedDate||'').localeCompare(x.date||x.completedDate||'')||y.id.localeCompare(x.id));
+const pages=Math.max(1,Math.ceil(visible.length/8));state.page=Math.min(state.page,pages-1);$('#rd-list-title').textContent='보고 상세 내역';$('#rd-rows').innerHTML=visible.slice(state.page*8,state.page*8+8).map(r=>`<tr><td>${r.date?r.date.slice(5):'기록 없음'}</td><td>${esc(r.category)}</td><td>${esc(r.reporter)}</td><td class="rd-title">${esc(r.title)}</td><td>${r.minutes>=60?'장시간 · 확인 필요':r.completedDate?'완료':'완료 기록 없음'}</td><td>${r.minutes===null?'—':Math.round(r.minutes)+'분'+(r.minutes>=60&&!state.long?' (시간 집계 제외)':'')}</td></tr>`).join('')||'<tr><td colspan="6" class="rd-empty">해당 내역이 없습니다.</td></tr>';
+$('#rd-count').textContent=`${visible.length}건 · ${state.page+1} / ${pages}페이지`;$('#rd-prev').disabled=state.page===0;$('#rd-next').disabled=state.page>=pages-1;
+}
+function update(){render();save();}
+$('#rd-period').onclick=e=>{if(e.target.dataset.period){state.period=e.target.dataset.period;state.page=0;update();}};
+for(const [id,key] of [['#rd-start','start'],['#rd-end','end'],['#rd-category','category']])$(id).onchange=e=>{state[key]=e.target.value;state.page=0;update();};
+$('#rd-search').oninput=e=>{state.query=e.target.value;state.page=0;update();};$('#rd-long').onchange=e=>{state.long=e.target.checked;update();};$('#rd-prev').onclick=()=>{state.page--;update();};$('#rd-next').onclick=()=>{state.page++;update();};
+$('#rd-export').onclick=()=>{if(!globalThis.XLSX){$('#rd-export-status').textContent='엑셀 기능을 불러오지 못했습니다. 잠시 후 다시 눌러 주세요.';return;}const c=calculate();if(!c.a||!c.b||c.a>c.b)return;const total=c.valid.reduce((s,r)=>s+r.minutes,0),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['보고 통계'],['기간',c.a,c.b],['시간대','Asia/Seoul'],['테스트 제외 기준','제목에 테스트 포함'],['보고시간 기준',state.long?'1시간 이상 포함':'1시간 미만 · 장시간 기록 제외'],['등록 건수',c.reg.length],['완료 건수',c.complete.length],['평균 보고시간(분)',c.valid.length?total/c.valid.length:'자료 없음'],['총 보고시간(분)',total]]),'요약');const rows=c.good.filter(r=>between(r.date,c.a,c.b)||between(r.completedDate,c.a,c.b)).map(r=>({'등록일':r.date,'완료일':r.completedDate||'','분야':r.category,'보고자':r.reporter,'제목':r.title,'보고시간(분)':r.minutes??'','기록 분류':r.minutes>=60?'장시간 기록 · 확인 필요':'일반','등록 집계':between(r.date,c.a,c.b)?'포함':'기간 외','완료 집계':between(r.completedDate,c.a,c.b)?'포함':'기간 외','시간 집계':c.valid.includes(r)?'포함':'제외'}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'보고 내역');const testRows=c.all.filter(r=>isTest(r)&&(between(r.date,c.a,c.b)||between(r.completedDate,c.a,c.b))).map(r=>({'등록일':r.date,'완료일':r.completedDate||'','분야':r.category,'보고자':r.reporter,'제목':r.title,'보고시간(분)':r.minutes??'','제외 사유':'제목에 테스트 포함','통계 집계':'제외'}));XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(testRows,{header:['등록일','완료일','분야','보고자','제목','보고시간(분)','제외 사유','통계 집계']}),'테스트 제외 내역');XLSX.writeFile(wb,`보고통계_${c.a}_${c.b}.xlsx`);$('#rd-export-status').textContent='선택 기간의 통계와 보고 내역, 테스트 제외 내역을 각각 별도 시트로 생성했습니다. 목록 검색 조건은 적용하지 않습니다.';};
+window.reportSetHistory=(entries)=>{base=normalizeHistory(entries);$('#rd-export').disabled=false;render();};
+$('#rd-export').disabled=true;
+})();
+</script>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</div><script>const firebaseConfig = {
   apiKey: "AIzaSyDrKIGHnhSHRbYj0aPzCUdvk3eZMgoEOW4",
   authDomain: "reportflowincomeenergy.firebaseapp.com",
   databaseURL: "https://reportflowincomeenergy-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -190,8 +189,8 @@ async function fetchHistory(isRetry = false) {
     }
     const data = await res.json();
     history = data ? Object.values(data) : [];
-    document.getElementById('connectionNotice').style.display = 'none';
-    render();
+    document.getElementById('connectionNotice').style.display = 'block';document.getElementById('connectionNotice').innerText='최종 갱신: '+new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' · 1분마다 갱신';
+    window.reportSetHistory(history);
   } catch (e) {
     console.error("fetchHistory error:", e);
     document.getElementById('connectionNotice').style.display = 'block';
@@ -199,202 +198,6 @@ async function fetchHistory(isRetry = false) {
   }
 }
 
-const MAX_PROCESSING_TIME_MS = 60 * 60 * 1000;
-
-function isValidProcessingRecord(record) {
-  return record.type === "완료" && Number.isFinite(record.processingTimeMs) &&
-    record.processingTimeMs > 0 && record.processingTimeMs < MAX_PROCESSING_TIME_MS;
-}
-
-function render() {
-  const registered = history.filter(h => h.type === "등록");
-  const completed = history.filter(isValidProcessingRecord);
-
-  const todayStr = new Date().toISOString().split("T")[0];
-  const monthPrefix = todayStr.slice(0, 7);
-
-  const monthlyTotal = registered.filter(h => h.date && h.date.startsWith(monthPrefix)).length;
-  const todayTotal = registered.filter(h => h.date === todayStr).length;
-
-  const avgProcessingMin = completed.length > 0
-    ? Math.round(completed.reduce((sum, h) => sum + h.processingTimeMs, 0) / completed.length / 1000 / 60)
-    : null;
-
-  const categoryCounts = registered.reduce((acc, h) => {
-    const cat = h.category || "기타";
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {});
-  const totalCategoryCount = Object.values(categoryCounts).reduce((a, b) => a + b, 0) || 1;
-  const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-
-  const categoryAvgMin = Object.keys(categoryCounts).reduce((acc, cat) => {
-    const items = completed.filter(h => (h.category || "기타") === cat);
-    acc[cat] = items.length > 0
-      ? Math.round(items.reduce((sum, h) => sum + h.processingTimeMs, 0) / items.length / 1000 / 60)
-      : null;
-    return acc;
-  }, {});
-
-  const last14 = lastNDates(14);
-  const dailyCounts = last14.map(date => registered.filter(h => h.date === date).length);
-
-  const last7 = lastNDates(7);
-  const prev7 = lastNDates(14).slice(0, 7);
-  const last7Total = registered.filter(h => last7.includes(h.date)).length;
-  const prev7Total = registered.filter(h => prev7.includes(h.date)).length;
-  const weekOverWeek = prev7Total > 0 ? Math.round(((last7Total - prev7Total) / prev7Total) * 100) : 0;
-
-  const bottleneckCategory = Object.entries(categoryAvgMin).filter(([, min]) => min !== null).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-
-  // ----- 텍스트 -----
-  document.getElementById('monthlyTotal').innerText = `${monthlyTotal}건`;
-  document.getElementById('todayTotal').innerText = `${todayTotal}건`;
-  document.getElementById('avgProcessing').innerText = avgProcessingMin === null ? "자료 없음" : `${avgProcessingMin}분`;
-  document.getElementById('topCategory').innerText = topCategory;
-  document.getElementById('totalCategoryCount').innerText = totalCategoryCount;
-
-  document.getElementById('insightText').innerHTML =
-    `등록 건수 전주 대비 <span style="font-weight:600;color:#AFA9EC;">${weekOverWeek >= 0 ? weekOverWeek + '% 증가' : Math.abs(weekOverWeek) + '% 감소'}</span>. ` +
-    `<span style="font-weight:600;color:#AFA9EC;">${topCategory} 분야</span>에 보고 집중. ` +
-    (bottleneckCategory === "-" ? "1시간 미만의 완료 보고가 없어 처리시간을 분석할 수 없습니다." : `<span style="font-weight:600;color:#AFA9EC;">${bottleneckCategory} 분야</span>는 평균 처리시간이 가장 길어 병목 구간으로 확인됨.`);
-  document.getElementById('weekOverWeekVal').innerText = `${weekOverWeek >= 0 ? '+' : ''}${weekOverWeek}%`;
-  document.getElementById('bottleneckVal').innerText = bottleneckCategory;
-  document.getElementById('focusVal').innerText = topCategory;
-
-  // ----- 범례 -----
-  const legendEl = document.getElementById('categoryLegend');
-  legendEl.innerHTML = '';
-  Object.entries(categoryCounts).forEach(([cat, count]) => {
-    const pct = Math.round((count / totalCategoryCount) * 100);
-    const color = (CATEGORY_COLORS[cat] || DEFAULT_COLOR).solid;
-    const span = document.createElement('span');
-    span.style.cssText = 'display:flex;align-items:center;gap:4px;';
-    span.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>${cat} ${pct}%`;
-    legendEl.appendChild(span);
-  });
-
-  // ----- 일별 등록 추이 차트 -----
-  if (dailyChartInstance) dailyChartInstance.destroy();
-  dailyChartInstance = new Chart(document.getElementById('dailyChart'), {
-    type: 'bar',
-    data: {
-      labels: last14.map(formatDateLabel),
-      datasets: [{ data: dailyCounts, backgroundColor: '#7F77DD', borderRadius: 4, maxBarThickness: 22 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#888' } },
-        y: { grid: { color: 'rgba(137,135,129,0.15)' }, beginAtZero: true, ticks: { color: '#888' } }
-      }
-    }
-  });
-
-  // ----- 분야별 비중 도넛 차트 -----
-  if (catChartInstance) catChartInstance.destroy();
-  const catCtx = document.getElementById('catChart').getContext('2d');
-  const catLabels = Object.keys(categoryCounts);
-  const catData = catLabels.map(l => categoryCounts[l]);
-  const catColors = catLabels.map(l => {
-    const c = CATEGORY_COLORS[l] || DEFAULT_COLOR;
-    const g = catCtx.createLinearGradient(0, 0, 160, 160);
-    g.addColorStop(0, c.from);
-    g.addColorStop(1, c.to);
-    return g;
-  });
-  catChartInstance = new Chart(catCtx, {
-    type: 'doughnut',
-    data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: catColors, borderWidth: 0, hoverOffset: 4, spacing: 1 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(20,20,20,0.9)', padding: 10, cornerRadius: 8 } },
-      cutout: '78%', rotation: -90
-    }
-  });
-
-  // ----- 분야별 처리시간 차트 -----
-  if (deptChartInstance) deptChartInstance.destroy();
-  const sorted = Object.entries(categoryAvgMin).filter(([, min]) => min !== null).sort((a, b) => b[1] - a[1]);
-  deptChartInstance = new Chart(document.getElementById('deptChart'), {
-    type: 'bar',
-    data: {
-      labels: sorted.map(([cat]) => cat),
-      datasets: [{ data: sorted.map(([, min]) => min), backgroundColor: '#7F77DD', borderRadius: 4, maxBarThickness: 20 }]
-    },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.parsed.x + '분' } } },
-      scales: {
-        x: { beginAtZero: true, ticks: { stepSize: 10, callback: (v) => v + '분', color: '#888' }, grid: { color: 'rgba(137,135,129,0.15)' } },
-        y: { grid: { display: false }, ticks: { color: '#888' } }
-      }
-    }
-  });
-
-  // 엑셀 내보내기에서 쓸 수 있도록 최신 계산값 저장
-  window.__statsSnapshot = {
-    registered, completed, categoryCounts, categoryAvgMin,
-    monthlyTotal, todayTotal, avgProcessingMin, topCategory, weekOverWeek, bottleneckCategory, todayStr
-  };
-}
-
-function handleExportExcel() {
-  const s = window.__statsSnapshot;
-  if (!s) {
-    alert("아직 불러온 데이터가 없습니다. 화면이 정상적으로 로딩된 후 다시 시도해 주세요.");
-    return;
-  }
-
-  const rawRows = history.map(h => ({
-    구분: h.type,
-    분야: h.category || "",
-    보고자: h.reporter || "",
-    제목: h.title || "",
-    날짜: h.date || "",
-    처리시간_분: h.processingTimeMs ? Math.round(h.processingTimeMs / 1000 / 60) : ""
-  }));
-
-  const dailyCountsMap = s.registered.reduce((acc, h) => {
-    acc[h.date] = (acc[h.date] || 0) + 1;
-    return acc;
-  }, {});
-  const dailyRows = Object.entries(dailyCountsMap).sort(([a], [b]) => a.localeCompare(b));
-  const categoryRows = Object.keys(s.categoryCounts).map(cat => [cat, s.categoryCounts[cat], s.categoryAvgMin[cat] ?? "자료 없음"]);
-
-  const wb = XLSX.utils.book_new();
-  const summarySheet = XLSX.utils.aoa_to_sheet([
-    ["보고 등록 통계 요약", `생성일: ${s.todayStr}`],
-    [],
-    ["일별 등록 건수"],
-    ["날짜", "등록건수"],
-    ...dailyRows,
-    [],
-    ["분야별 통계"],
-    ["분야", "등록건수", "평균처리시간(분)"],
-    ...categoryRows,
-    [],
-    ["전체 요약"],
-    ["이번 달 누적 등록", s.monthlyTotal],
-    ["오늘 등록", s.todayTotal],
-    ["평균 처리시간(분)", s.avgProcessingMin ?? "자료 없음"],
-    ["처리시간 집계 기준", "1시간 미만인 완료 보고만 반영 (1시간 이상 제외)"],
-    ["최다 분야", s.topCategory],
-    ["전주 대비 증감률(%)", s.weekOverWeek],
-    ["병목 분야", s.bottleneckCategory]
-  ]);
-  XLSX.utils.book_append_sheet(wb, summarySheet, "요약");
-
-  const rawSheet = XLSX.utils.json_to_sheet(rawRows);
-  XLSX.utils.book_append_sheet(wb, rawSheet, "원본데이터");
-
-  XLSX.writeFile(wb, `보고통계_${s.todayStr}.xlsx`);
-}
-
-document.getElementById('exportBtn').addEventListener('click', handleExportExcel);
-
-// ----- 관리자 PIN 확인 (index.html과 동일한 토큰을 공유해서, 이미 관리자 모드인 사람은 다시 입력 안 해도 됨) -----
 function getAdminToken() {
   const token = localStorage.getItem('adminToken');
   const expiresAt = Number(localStorage.getItem('adminTokenExpiresAt') || 0);
@@ -453,6 +256,4 @@ if (getAdminToken()) {
 } else {
   document.getElementById('pinInput').focus();
 }
-</script>
-</body>
-</html>
+</script></body></html>
