@@ -728,6 +728,25 @@ body.light-mode #queueList .urgent-request-reason { color: #77718F !important; }
 body.light-mode .urgent-request-panel button:first-child { background: #8BD0C8 !important; color: #FFFFFF !important; }
 body.light-mode .urgent-request-panel button:last-child { background: #E8E1F4 !important; color: #7955B5 !important; }
 </style>
+<style id="light-mode-header-mint-controls">
+body.light-mode #headerControls > button,
+body.light-mode #headerControls > a,
+body.light-mode #headerControls #connectionStatus,
+body.light-mode #headerControls #connectionStatus > span {
+  border-radius: 0.5rem !important;
+}
+body.light-mode #headerControls #directorModeBtn,
+body.light-mode:has(#adminCard:not(.hidden)) #headerControls #directorModeBtn,
+body.light-mode #headerControls #adminModeBtn.always-white-text,
+body.light-mode #headerControls > button:active,
+body.light-mode #headerControls > a:active {
+  background: #8BD0C8 !important;
+  border-color: #8BD0C8 !important;
+  color: #FFFFFF !important;
+}
+body.light-mode #headerControls #adminModeBtn.always-white-text *,
+body.light-mode #headerControls #directorModeBtn * { color: #FFFFFF !important; }
+</style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased light-mode">
