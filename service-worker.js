@@ -34,7 +34,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v6-urgent-dedup";
+const CACHE_NAME = "director-queue-pwa-v7-realtime";
 const CORE_ASSETS = [
   "./",
   "./index.html",
