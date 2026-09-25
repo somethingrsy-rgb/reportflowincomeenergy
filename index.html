@@ -1160,9 +1160,6 @@ function ensureDirectorStatusDefaults(state) {
   return state;
 }
 
-let lastKnownStatus = null;
-let lastKnownBookingId = null;
-let preCallAlertedPos = null; // 사전 알림을 마지막으로 보낸 순번 (null = 아직 없음)
 let isExpandedCompleted = false;
 let isAdminMode = false;
 let isDirectorMode = false;
@@ -1249,7 +1246,6 @@ function applyRealtimeState(data) {
     ensureDirectorStatusDefaults(localState);
   }
   renderUI();
-  checkMyStatusTriggers();
   checkAdminUrgentRequests();
   retryPushTokenSync();
 }
@@ -1884,8 +1880,7 @@ function displayAdminUrgentAlert(key, message) {
   }
   box.firstElementChild.textContent = '🚨 긴급 처리 요청 · ' + message;
   box.hidden = false;
-  playChime();
-  // In-app alert only. The server is the sole source of urgent OS push notifications.
+  // 화면 안내는 무음으로 표시한다. 소리와 시스템 알림은 FCM 수신 경로에서만 처리한다.
 }
 function checkAdminUrgentRequests() {
   if (!isAdminMode) {
@@ -1899,45 +1894,6 @@ function checkAdminUrgentRequests() {
         (b.department || '') + ' ' + (b.reporterName || '') + '님이 긴급 처리를 요청했습니다. 관리자 화면에서 확인해 주세요.');
     }
   }
-}
-
-function checkMyStatusTriggers() {
-  if (isDirectorMode) return;
-
-  const myIdStr = getSelectedMyBookingId();
-  if (!myIdStr) return;
-
-  const myId = parseInt(myIdStr, 10);
-  const myBooking = localState.bookings.find(b => b.id === myId);
-  if (!myBooking) return;
-
-  if (lastKnownBookingId !== myIdStr) {
-    lastKnownStatus = null;
-    preCallAlertedPos = null;
-    lastKnownBookingId = myIdStr;
-  }
-  if (myBooking.status === "REPORTING" && lastKnownStatus !== "REPORTING") {
-    sendBrowserNotification("[긴급] 내 차례입니다!", `${myBooking.department} ${myBooking.reporterName}님, 지금 즉시 국장실로 입장하세요!`);
-    playChime();
-  }
-
-  if (myBooking.status === "WAITING") {
-    const waitingList = getOrderedWaitingList(localState.bookings);
-    const pos = waitingList.findIndex(b => b.id === myId) + 1;
-
-    // 대기 1번(다음 차례)일 때만 알림을 보낸다. 2번 이하에는 사전 알림을 보내지 않는다.
-    if (pos === 1) {
-      if (preCallAlertedPos !== 1) {
-        sendBrowserNotification("다음번 차례입니다", "국장실 근처로 이동해 주십시오.");
-        playChime();
-        preCallAlertedPos = 1;
-      }
-    } else if (pos > 1) {
-      preCallAlertedPos = null;
-    }
-  }
-
-  lastKnownStatus = myBooking.status;
 }
 
 function playChime() {
@@ -1970,7 +1926,7 @@ function needsIosInstall() {
   return ios && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches;
 }
 
-async function sendBrowserNotification(title, text) {
+async function sendBrowserNotification(title, text, eventKey) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return false;
   try {
     if (!('serviceWorker' in navigator)) throw new Error('서비스워커 미지원');
@@ -1978,7 +1934,7 @@ async function sendBrowserNotification(title, text) {
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification(title, {
       body: text, icon: './icons/icon-192.png', badge: './icons/notification-badge.png',
-      tag: 'director-queue-' + title, data: { url: './index.html' }
+      tag: 'director-queue-' + eventKey, renotify: false, data: { url: './index.html' }
     });
     return true;
   } catch (error) {
@@ -2182,7 +2138,7 @@ async function handleFormSubmit(event) {
       alert("성공적으로 예약 대기 신청이 접수되었습니다.");
       playChime();
       // 관리자 알림은 결과를 기다릴 필요가 없으므로 백그라운드로 전송
-      notifyAdminOfNewRegistration({ department: dept, reporterName: reporter, title: title });
+      notifyAdminOfNewRegistration({ bookingId: newId, department: dept, reporterName: reporter, title: title });
     }
   } finally {
     // 성공/실패와 관계없이 버튼을 원래 상태로 복구
@@ -3225,17 +3181,33 @@ window.getStoredFcmToken = async function getStoredFcmToken() {
   return await window.initPushNotifications();
 };
 
+// 여러 탭에서 같은 FCM 메시지를 받아도 한 번만 표시한다.
+const seenForegroundPushes = new Set();
+async function handleForegroundPush(payload) {
+  const key = payload?.data?.eventId || payload?.messageId;
+  if (!key) return; // 식별자 없는 메시지는 중복 여부를 판별할 수 없다.
+  const display = async () => {
+    const storageKey = 'foregroundPushShown:' + key;
+    if (seenForegroundPushes.has(key)) return;
+    try { if (localStorage.getItem(storageKey)) return; } catch (_) {}
+    const title = payload?.notification?.title || payload?.data?.title || '국장실 보고대기';
+    const body = payload?.notification?.body || payload?.data?.body || '새 알림이 도착했습니다.';
+    if (payload?.data?.type === 'urgent-request') {
+      showAdminUrgentAlert(payload.data.requestKey, body);
+    }
+    if (!await sendBrowserNotification(title, body, key)) return;
+    seenForegroundPushes.add(key);
+    try { localStorage.setItem(storageKey, String(Date.now())); } catch (_) {}
+    // 시스템 알림이 소리를 담당하므로 별도 차임을 겹쳐 재생하지 않는다.
+  };
+  if (navigator.locks?.request) return navigator.locks.request('foreground-push-' + key, display);
+  return display();
+}
+
 if (await isSupported()) {
   messaging = getMessaging(app);
-  onMessage(messaging, (payload) => {
-    if (payload?.data?.type === "urgent-request") {
-      showAdminUrgentAlert(payload.data.requestKey, payload.data.body || "긴급 요청을 확인해 주세요.");
-      return;
-    }
-    const title = payload?.notification?.title || payload?.data?.title || "국장실 보고대기";
-    const body = payload?.notification?.body || payload?.data?.body || "새 알림이 도착했습니다.";
-    sendBrowserNotification(title, body);
-    playChime();
+  onMessage(messaging, payload => {
+    handleForegroundPush(payload).catch(error => console.warn('푸시 표시 실패:', error));
   });
 }
 

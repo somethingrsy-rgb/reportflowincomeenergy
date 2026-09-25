@@ -23,8 +23,8 @@ messaging.onBackgroundMessage((payload) => {
     body,
     icon: "./icons/icon-192.png",
     badge: "./icons/notification-badge.png",
-    tag: "director-queue-alert",
-    renotify: true,
+    tag: "director-queue-" + (payload?.data?.eventId || payload?.messageId || "alert"),
+    renotify: false,
     data: { url: "./index.html" }
   });
 });
@@ -34,7 +34,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(clients.openWindow(event.notification?.data?.url || "./index.html"));
 });
 
-const CACHE_NAME = "director-queue-pwa-v7-realtime";
+const CACHE_NAME = "director-queue-pwa-v8-single-alert";
 const CORE_ASSETS = [
   "./",
   "./index.html",
