@@ -655,6 +655,68 @@ body.light-mode #registerSubmitBtn {
   color: #FFFFFF !important;
 }
 </style>
+<style id="light-mode-admin-reference">
+/* Admin reference palette, isolated from dark and public views. */
+body.light-mode:has(#adminCard:not(.hidden)) {
+  background: #F5F7FF;
+}
+body.light-mode:has(#adminCard:not(.hidden)) header .always-white-text,
+body.light-mode:has(#adminCard:not(.hidden)) #headerControls #directorModeBtn {
+  background: linear-gradient(135deg, #B29AFF, #8CDCF6) !important;
+}
+body.light-mode #adminCard {
+  background: #FAF9FF !important; border-color: #DED8FF !important;
+}
+body.light-mode #adminCard h2 { color: #5023EC !important; }
+body.light-mode #adminCard > p,
+body.light-mode #adminCard p.text-xs,
+body.light-mode #adminCard .text-gray-300,
+body.light-mode #adminCard .text-gray-400,
+body.light-mode #adminCard .text-gray-500 { color: #7D7EA6 !important; }
+body.light-mode #adminCard #adminSummary > div { background: #EDEDF7 !important; }
+body.light-mode #adminCard #adminSummary p:last-child { color: #171846 !important; }
+body.light-mode #adminCard button[onclick="adminCallNext()"],
+body.light-mode #quickAdminSection button[onclick="adminCallNext()"] {
+  background: linear-gradient(135deg, #8CE4E5, #39C5CD) !important;
+  color: #FFFFFF !important;
+}
+body.light-mode #adminCard button[onclick="adminCompleteCurrent()"],
+body.light-mode #quickAdminSection button[onclick="adminCompleteCurrent()"] {
+  background: linear-gradient(135deg, #CFB3FF, #A184F9) !important;
+  border-color: transparent !important; color: #FFFFFF !important;
+}
+body.light-mode #adminCard button[onclick="openWalkInModal()"] {
+  background: linear-gradient(135deg, #FFB09D, #FF856F) !important;
+  color: #FFFFFF !important;
+}
+body.light-mode #adminCard #adminAwayBtn,
+body.light-mode #adminCard #adminAwayBtn:hover {
+  background: linear-gradient(135deg, #FFEAAF, #FFD476) !important;
+  color: #B77512 !important;
+}
+body.light-mode #adminCard button[onclick="registerThisDeviceAsAdmin()"] {
+  background: #E9F5F4 !important; border-color: #BDE6E4 !important; color: #178F85 !important;
+}
+body.light-mode #adminCard .h-px { background: #E3DEFC !important; }
+body.light-mode #adminCard button[onclick="toggleDangerZone()"] .text-red-400 { color: #FF484F !important; }
+body.light-mode:has(#adminCard:not(.hidden)) #activeReportingCard {
+  background: linear-gradient(135deg, #BBA5FA, #A6E6F8) !important;
+  border-color: #D3D8FB !important;
+}
+body.light-mode #quickAdminSection { border-color: #AAA9D3 !important; }
+body.light-mode #quickAdminSection > div:first-child > span { color: #4F638C !important; }
+body.light-mode:has(#adminCard:not(.hidden)) #directorStatusCard {
+  background: linear-gradient(120deg, #FFF8EA, #F0EEFF, #E7F3FF) !important;
+  border-color: #C9BCFF !important;
+}
+body.light-mode #directorAwayToggleBtn {
+  background: #FFF4DE !important; border-color: #FFD587 !important; color: #D38A14 !important;
+}
+body.light-mode #completedCard { background: #FFFFFF !important; border-color: #E3DEFA !important; }
+body.light-mode #completedCard button > span > span {
+  background: #FFF4DE !important; border-color: #FFD587 !important; color: #D38A14 !important;
+}
+</style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased light-mode">
