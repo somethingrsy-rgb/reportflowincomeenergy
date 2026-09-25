@@ -1879,8 +1879,17 @@ function updateMyBookingUI() {
 
 const seenAdminUrgentRequests = new Set();
 function showAdminUrgentAlert(key, message) {
+  if (!key) return;
+  const display = () => displayAdminUrgentAlert(key, message);
+  if (navigator.locks?.request) return navigator.locks.request('admin-urgent-' + key, display);
+  return display();
+}
+function displayAdminUrgentAlert(key, message) {
+  const storageKey = 'adminUrgentShown:' + key;
+  try { if (localStorage.getItem(storageKey)) return; } catch (_) {}
   if (seenAdminUrgentRequests.has(key)) return;
   seenAdminUrgentRequests.add(key);
+  try { localStorage.setItem(storageKey, "1"); } catch (_) {}
   let box = document.getElementById('adminUrgentAlert');
   if (!box) {
     box = document.createElement('div');
@@ -1898,7 +1907,7 @@ function showAdminUrgentAlert(key, message) {
   box.firstElementChild.textContent = '🚨 긴급 처리 요청 · ' + message;
   box.hidden = false;
   playChime();
-  sendBrowserNotification('국장실 보고대기 - 긴급 처리 요청', message);
+  // In-app alert only. The server is the sole source of urgent OS push notifications.
 }
 function checkAdminUrgentRequests() {
   if (!isAdminMode) {
