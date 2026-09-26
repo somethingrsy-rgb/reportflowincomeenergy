@@ -95,7 +95,13 @@ exports.handler = async (event) => {
     const prevSnapshot = await stateRef.once("value");
     const prevState = prevSnapshot.val() || {};
 
-    await stateRef.set(nextState);
+    // 공지는 전용 저장 경로에서만 변경하며, 동시 공지 저장도 보존한다.
+    const savedState = await stateRef.transaction(current => ({
+      ...nextState,
+      notice: current?.notice || { text: '', enabled: false },
+      updatedAt: String(Math.max(Date.now(), Number(current?.updatedAt || 0) + 1))
+    }));
+    Object.assign(nextState, savedState.snapshot.val());
 
     // Await push on the server; do not depend on the caller keeping a page open.
     // 순번 변경·신규 등록·토큰 연결도 다음 차례 알림 대상이다.
@@ -120,3 +126,5 @@ exports.handler = async (event) => {
     return json(500, { ok: false, error: error.message || String(error) });
   }
 };
+
+exports.verifyToken = verifyToken;
