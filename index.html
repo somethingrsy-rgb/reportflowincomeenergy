@@ -560,10 +560,13 @@ body.light-mode .notice-banner { background:#faf7ff; color:#211b44; }
 .notice-controls { display:flex; flex-wrap:nowrap; align-items:center; gap:10px; font-size:12px; line-height:16px; }
 .notice-controls textarea { flex:1 1 0; width:0; min-width:0; height:40px; min-height:40px; max-height:40px; resize:none; overflow-y:auto; padding:11px 10px; border:1px solid #8b7ca8; border-radius:10px; background:transparent; color:inherit; font-size:12px; line-height:16px; box-sizing:border-box; }
 .notice-switch { display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; font-size:12px; line-height:16px; }
-.notice-switch input { appearance:none; -webkit-appearance:none; position:relative; width:18px; height:18px; flex-shrink:0; margin:0; border:1px solid #8BD0C8; border-radius:4px; background:transparent; cursor:pointer; }
-.notice-switch input:checked { background:#8BD0C8; }
-.notice-switch input:checked::after { content:''; position:absolute; left:5px; top:2px; width:5px; height:9px; border:solid white; border-width:0 2px 2px 0; transform:rotate(45deg); }
-.notice-switch input:focus-visible, #noticeSaveBtn:focus-visible { outline:2px solid #6ab8b0; outline-offset:3px; }
+.notice-switch { position:relative; min-height:40px; padding:0 2px; }
+.notice-switch input { position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:1; }
+.notice-checkmark { width:18px; height:18px; flex:0 0 18px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; border:1px solid #8BD0C8; border-radius:4px; background:transparent; pointer-events:none; }
+.notice-switch input:checked + .notice-checkmark { background:#8BD0C8; }
+.notice-switch input:checked + .notice-checkmark::after { content:''; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:translateY(-1px) rotate(45deg); }
+.notice-switch input:focus-visible + .notice-checkmark, #noticeSaveBtn:focus-visible { outline:2px solid #6ab8b0; outline-offset:3px; }
+.notice-switch:has(input:disabled) { opacity:.5; }
 #noticeSaveBtn { flex-shrink:0; height:40px; background:#8BD0C8 !important; color:#FFFFFF !important; padding:0 16px; border:0; border-radius:10px; font-size:12px; line-height:16px; font-weight:700; }
 #noticeSaveBtn:hover { background:#7BC2BA !important; }
 #noticeSaveBtn:disabled { opacity:.5; cursor:wait; }
@@ -762,6 +765,16 @@ body.light-mode #headerControls > a:active {
 body.light-mode #headerControls #adminModeBtn.always-white-text *,
 body.light-mode #headerControls #directorModeBtn * { color: #FFFFFF !important; }
 </style>
+<style id="notice-control-sizing">
+#adminCard .notice-controls { align-items:center; }
+#adminCard #noticeInput, #adminCard #noticeSaveBtn {
+  box-sizing:border-box !important; height:40px !important; min-height:40px !important; max-height:40px !important;
+  margin:0 !important; border-width:1px !important; border-style:solid !important; border-radius:10px !important;
+  font-size:12px !important; line-height:18px !important; padding:10px 12px !important;
+}
+#adminCard #noticeInput { resize:none !important; overflow-y:auto; }
+#adminCard #noticeSaveBtn { border-color:#8BD0C8 !important; display:inline-flex; align-items:center; justify-content:center; }
+</style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased light-mode">
@@ -946,7 +959,7 @@ applyStoredTheme();
 <label for="noticeInput" class="block text-xs font-bold text-gray-400 mb-2">공지 입력</label>
 <div class="notice-controls">
 <textarea id="noticeInput" rows="1" maxlength="500" placeholder="예: [공지] 14:40 일정 출발" oninput="noticeDraftDirty = true"></textarea>
-<label class="notice-switch"><input id="noticeEnabled" type="checkbox" role="switch" onchange="noticeDraftDirty = true">사용</label>
+<label class="notice-switch"><input id="noticeEnabled" type="checkbox" role="switch" oninput="noticeDraftDirty = true" onchange="noticeDraftDirty = true"><span class="notice-checkmark" aria-hidden="true"></span><span>사용</span></label>
 <button id="noticeSaveBtn" type="button" onclick="saveNotice()">저장</button>
 </div>
 <p id="noticeSaveStatus" class="text-xs text-gray-400" role="status" aria-live="polite">내용이 있고 사용을 켠 경우에만 일반 화면에 표시됩니다.</p>
@@ -1590,8 +1603,11 @@ async function saveNotice() {
   noticeSaving = true;
   input.disabled = toggle.disabled = button.disabled = true;
   status.textContent = '공지 저장 중…';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
   try {
     const response = await fetch('/.netlify/functions/notice-write', {
+      signal: controller.signal,
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: getAdminToken(), notice: { text, enabled: toggle.checked } })
     });
@@ -1604,8 +1620,9 @@ async function saveNotice() {
     noticeDraftDirty = false;
     status.textContent = result.notice.enabled ? '공지가 저장되어 일반 화면에 표시됩니다.' : '저장했습니다. 일반 화면의 공지는 숨겨집니다.';
   } catch (error) {
-    status.textContent = error.message + ' 내용을 확인하고 다시 저장해 주세요.';
+    status.textContent = (error.name === 'AbortError' ? '저장 응답이 지연되고 있습니다.' : error.message) + ' 내용을 확인하고 다시 저장해 주세요.';
   } finally {
+    clearTimeout(timeout);
     noticeSaving = false;
     input.disabled = toggle.disabled = button.disabled = false;
     renderNotice();
